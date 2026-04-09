@@ -142,17 +142,23 @@
 </div>
 
 <script>
-const STORAGE_KEY = "upscTrackerState";
-let appState = loadState();
-function uid(){ return Math.random().toString(36).slice(2,9); }
+window.addEventListener("error", (e) => {
+  console.error("Runtime error:", e.message, "at", `${e.filename}:${e.lineno}`);
+});
 
-/**
- * PRELOADED SYLLABUS (history_notes.md format):
- * # Subject
- * each line under subject => subtopic
- * stored as Subject -> one default Topic Group ("Core Topics") -> Subtopics
- */
-const PRELOADED_MD = `# Ancient History
+document.addEventListener("DOMContentLoaded", () => {
+  const STORAGE_KEY = "upscTrackerState";
+  let appState = loadState();
+  function uid(){ return Math.random().toString(36).slice(2,9); }
+  function byId(id){ return document.getElementById(id); }
+  function on(id, event, handler){
+    const el = byId(id);
+    if(!el){ console.warn(`Missing element #${id}; skipped binding`); return; }
+    el.addEventListener(event, handler);
+  }
+
+  const PRELOADED_MD = `
+# Ancient History
 Pre-Historic India
 Indus Valley Civilization
 Vedic Period
@@ -338,13 +344,11 @@ Governance Innovations and Best Practices
 # International Relations
 Evolution and Key Principles
 Determinants of India's Foreign Policy
-Non-Aligned Movement (NAM) and NAM 2.0
 India's Nuclear Doctrine
-Evolution of Neighborhood Policy
+India's Neighborhood
 Look East Policy and Act East Policy
 Look West Policy
 Indian Diaspora: Role, Safety Issues and Welfare Schemes
-India - Neighborhood Relations
 India - Russian Relations
 India - China Relations
 India - USA Relations
@@ -354,26 +358,9 @@ India - West Asia Relations
 India - Southeast Asia Relations
 India - Africa Relations
 India - Australia Relations
-India - France Relations
-India - Germany Relations
-India - United Kingdom Relations
-The World Trade Organization (WTO)
-International Monetary Fund (IMF)
-Nuclear Security and Related Organizations
-BRICS
-EU
-BIMSTEC
-IBSA
-SAARC
-India - ASEAN Economic Cooperation
-Shanghai Cooperation Organization
-G20
-Commonwealth Nation
+India - EU Relations
 United Nation & Its Bodies
-Special UN Agencies
-World Bank
-International Criminal Court (ICC)
-World Economic Forum (WEF)
+Organizations
 
 # Indian Economy
 Indian Economy: Historical Perspective
@@ -503,418 +490,421 @@ Nanotechnology and Materials Science
 Renewable Energy and Sustainability
 Intellectual Property Rights (IPR)`;
 
-/** -------- Defaults -------- */
-function parseSubjectWiseMD(text){
-  const lines = text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-  const subjects = [];
-  let current = null;
-
-  for(const line of lines){
-    if(line.startsWith("# ")){
-      current = { id:uid(), name:line.slice(2).trim(), expanded:true, topics:[
-        { id:uid(), name:"Core Topics", done:false, subtopics:[] }
-      ]};
-      subjects.push(current);
-    }else{
-      if(!current){
-        current = { id:uid(), name:"General", expanded:true, topics:[{id:uid(),name:"Core Topics",done:false,subtopics:[]}] };
+  function parseSubjectWiseMD(text){
+    const lines = text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+    const subjects = [];
+    let current = null;
+    for(const line of lines){
+      if(line.startsWith("# ")){
+        current = { id:uid(), name:line.slice(2).trim(), expanded:true, topics:[{ id:uid(), name:"Core Topics", done:false, subtopics:[] }] };
         subjects.push(current);
+      }else{
+        if(!current){
+          current = { id:uid(), name:"General", expanded:true, topics:[{id:uid(),name:"Core Topics",done:false,subtopics:[]}] };
+          subjects.push(current);
+        }
+        current.topics[0].subtopics.push({ id:uid(), name:line, done:false });
       }
-      current.topics[0].subtopics.push({ id:uid(), name:line, done:false });
     }
+    return subjects;
   }
-  return subjects;
-}
 
-function defaultSyllabus(){ return parseSubjectWiseMD(PRELOADED_MD); }
-function defaultPlan(){
-  return [
-    {id:uid(), text:"Set weekly targets", type:"Weekly", done:false, linked:null},
-    {id:uid(), text:"Daily revision + PYQ", type:"Daily", done:false, linked:null}
-  ];
-}
-
-/** -------- State -------- */
-function loadState(){
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if(raw){ try { return JSON.parse(raw); } catch(e){} }
-  return { syllabus:defaultSyllabus(), plan:defaultPlan(), darkMode:false };
-}
-function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); }
-function resetAll(){ appState={ syllabus:defaultSyllabus(), plan:defaultPlan(), darkMode:false }; saveState(); renderAll(); }
-
-/** -------- Navigation -------- */
-document.querySelectorAll(".nav-btn").forEach(btn=>{
-  btn.onclick=()=>{
-    document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
-    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-    document.getElementById(btn.dataset.page).classList.add("active");
+  function defaultSyllabus(){ return parseSubjectWiseMD(PRELOADED_MD); }
+  function defaultPlan(){
+    return [
+      {id:uid(), text:"Set weekly targets", type:"Weekly", done:false, linked:null},
+      {id:uid(), text:"Daily revision + PYQ", type:"Daily", done:false, linked:null}
+    ];
   }
-});
 
-/** -------- Parser for uploaded/pasted content -------- */
-function cleanLine(line){
-  return line.replace(/\[cite_start\]/g,"").replace(/\[cite:[^\]]*\]/g,"").replace(/\*\*/g,"").trim();
-}
-function parseSyllabusText(text){
-  // For your new format, we parse as subject-wise list:
-  return parseSubjectWiseMD(text.split(/\r?\n/).map(cleanLine).join("\n"));
-}
-async function parsePDF(file){
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  let txt = "";
-  for(let i=0;i<bytes.length;i++) txt += (bytes[i]>=32&&bytes[i]<=126)?String.fromCharCode(bytes[i]):" ";
-  return txt.replace(/\s+/g," ").split(". ").slice(0,500).join("\n");
-}
+  function loadState(){
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){ try { return JSON.parse(raw); } catch(e){} }
+    return { syllabus:defaultSyllabus(), plan:defaultPlan(), darkMode:false };
+  }
+  function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); }
+  function resetAll(){ appState={ syllabus:defaultSyllabus(), plan:defaultPlan(), darkMode:false }; saveState(); renderAll(); }
 
-/** -------- Render Syllabus -------- */
-function renderSyllabus(){
-  const q = document.getElementById("searchInput").value.trim().toLowerCase();
-  const container = document.getElementById("syllabusContainer");
-  container.innerHTML = "";
+  document.querySelectorAll(".nav-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+      const page = byId(btn.dataset.page);
+      if(page) page.classList.add("active");
+    });
+  });
 
-  appState.syllabus.forEach(subject=>{
-    const subjectMatches = subject.name.toLowerCase().includes(q);
-    const subjectEl = document.createElement("div");
-    subjectEl.className = "subject";
+  function cleanLine(line){
+    return line.replace(/\[cite_start\]/g,"").replace(/\[cite:[^\]]*\]/g,"").replace(/\*\*/g,"").trim();
+  }
+  function parseSyllabusText(text){
+    return parseSubjectWiseMD(text.split(/\r?\n/).map(cleanLine).join("\n"));
+  }
+  async function parsePDF(file){
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    let txt = "";
+    for(let i=0;i<bytes.length;i++) txt += (bytes[i]>=32&&bytes[i]<=126)?String.fromCharCode(bytes[i]):" ";
+    return txt.replace(/\s+/g," ").split(". ").slice(0,500).join("\n");
+  }
 
-    const head = document.createElement("div");
-    head.className = "subject-head";
+  function toggleTopic(topicId,val){
+    appState.syllabus.forEach(s=>s.topics.forEach(t=>{
+      if(t.id===topicId){
+        t.done=val;
+        if(t.subtopics && t.subtopics.length) t.subtopics.forEach(st=>st.done=val);
+      }
+    }));
+  }
+  function toggleSubtopic(topicId, subId, val){
+    appState.syllabus.forEach(s=>s.topics.forEach(t=>{
+      if(t.id===topicId){
+        const sub=t.subtopics.find(x=>x.id===subId);
+        if(sub) sub.done=val;
+        t.done = t.subtopics.length ? t.subtopics.every(x=>x.done) : t.done;
+      }
+    }));
+  }
 
-    const title = document.createElement("div");
-    title.className = "subject-title";
-    title.innerHTML = `<strong>${subject.name}</strong>`;
-    title.onclick = ()=>{ subject.expanded = !subject.expanded; saveState(); renderSyllabus(); };
+  function getSubjectCompletion(subject){
+    let total=0,done=0;
+    subject.topics.forEach(t=>{
+      total++; if(t.done) done++;
+      t.subtopics.forEach(st=>{ total++; if(st.done) done++; });
+    });
+    return total?Math.round(done*100/total):0;
+  }
+  function getOverallMetrics(){
+    let total=0,done=0;
+    appState.syllabus.forEach(s=>s.topics.forEach(t=>{
+      total++; if(t.done) done++;
+      t.subtopics.forEach(st=>{ total++; if(st.done) done++; });
+    }));
+    return {total,done,percent: total?Math.round(done*100/total):0};
+  }
 
-    const pct = getSubjectCompletion(subject);
-    const right = document.createElement("div");
-    right.className = "subject-actions";
-    right.innerHTML = `
-      <div class="subject-progress"><div class="bar"><span style="width:${pct}%"></span></div><div class="small">${pct}%</div></div>
-      <button class="btn-sm" data-add-topic="${subject.id}">+ Topic</button>
-      <button class="btn-sm btn-danger" data-del-subject="${subject.id}">Delete</button>
-    `;
+  function renderSyllabus(){
+    const search = byId("searchInput");
+    const q = (search?.value || "").trim().toLowerCase();
+    const container = byId("syllabusContainer");
+    if(!container) return;
+    container.innerHTML = "";
 
-    head.append(title,right);
-    subjectEl.appendChild(head);
+    appState.syllabus.forEach(subject=>{
+      const subjectMatches = subject.name.toLowerCase().includes(q);
+      const subjectEl = document.createElement("div");
+      subjectEl.className = "subject";
 
-    const body = document.createElement("div");
-    body.style.display = subject.expanded ? "block" : "none";
+      const head = document.createElement("div");
+      head.className = "subject-head";
 
-    subject.topics.forEach(topic=>{
-      const topicMatches = topic.name.toLowerCase().includes(q);
-      const subMatches = topic.subtopics.some(s=>s.name.toLowerCase().includes(q));
-      if(q && !(subjectMatches || topicMatches || subMatches)) return;
+      const title = document.createElement("div");
+      title.className = "subject-title";
+      title.innerHTML = `<strong>${subject.name}</strong>`;
+      title.addEventListener("click", ()=>{ subject.expanded = !subject.expanded; saveState(); renderSyllabus(); });
 
-      const topicDiv = document.createElement("div");
-      topicDiv.className = "topic";
-      topicDiv.innerHTML = `
-        <div class="topic-row">
-          <label><input type="checkbox" ${topic.done ? "checked":""} data-type="topic" data-id="${topic.id}"> ${topic.name}</label>
-          <div class="actions">
-            <button class="btn-sm" data-add-sub="${topic.id}">+ Subtopic</button>
-            <button class="btn-sm btn-danger" data-del-topic="${topic.id}">Delete</button>
-          </div>
-        </div>
+      const pct = getSubjectCompletion(subject);
+      const right = document.createElement("div");
+      right.className = "subject-actions";
+      right.innerHTML = `
+        <div class="subject-progress"><div class="bar"><span style="width:${pct}%"></span></div><div class="small">${pct}%</div></div>
+        <button class="btn-sm" data-add-topic="${subject.id}">+ Topic</button>
+        <button class="btn-sm btn-danger" data-del-subject="${subject.id}">Delete</button>
       `;
-      body.appendChild(topicDiv);
 
-      topic.subtopics.forEach(sub=>{
-        if(q && !(subjectMatches || topicMatches || sub.name.toLowerCase().includes(q))) return;
-        const subDiv = document.createElement("div");
-        subDiv.className = "subtopic";
-        subDiv.innerHTML = `
-          <div class="subtopic-row">
-            <label><input type="checkbox" ${sub.done ? "checked":""} data-type="sub" data-topic="${topic.id}" data-id="${sub.id}"> ${sub.name}</label>
-            <div class="actions"><button class="btn-sm btn-danger" data-del-sub="${topic.id}|${sub.id}">Delete</button></div>
+      head.append(title,right);
+      subjectEl.appendChild(head);
+
+      const body = document.createElement("div");
+      body.style.display = subject.expanded ? "block" : "none";
+
+      subject.topics.forEach(topic=>{
+        const topicMatches = topic.name.toLowerCase().includes(q);
+        const subMatches = topic.subtopics.some(s=>s.name.toLowerCase().includes(q));
+        if(q && !(subjectMatches || topicMatches || subMatches)) return;
+
+        const topicDiv = document.createElement("div");
+        topicDiv.className = "topic";
+        topicDiv.innerHTML = `
+          <div class="topic-row">
+            <label><input type="checkbox" ${topic.done ? "checked":""} data-type="topic" data-id="${topic.id}"> ${topic.name}</label>
+            <div class="actions">
+              <button class="btn-sm" data-add-sub="${topic.id}">+ Subtopic</button>
+              <button class="btn-sm btn-danger" data-del-topic="${topic.id}">Delete</button>
+            </div>
           </div>
         `;
-        body.appendChild(subDiv);
+        body.appendChild(topicDiv);
+
+        topic.subtopics.forEach(sub=>{
+          if(q && !(subjectMatches || topicMatches || sub.name.toLowerCase().includes(q))) return;
+          const subDiv = document.createElement("div");
+          subDiv.className = "subtopic";
+          subDiv.innerHTML = `
+            <div class="subtopic-row">
+              <label><input type="checkbox" ${sub.done ? "checked":""} data-type="sub" data-topic="${topic.id}" data-id="${sub.id}"> ${sub.name}</label>
+              <div class="actions"><button class="btn-sm btn-danger" data-del-sub="${topic.id}|${sub.id}">Delete</button></div>
+            </div>
+          `;
+          body.appendChild(subDiv);
+        });
+      });
+
+      subjectEl.appendChild(body);
+      container.appendChild(subjectEl);
+    });
+
+    container.querySelectorAll("input[type='checkbox']").forEach(cb=>{
+      cb.addEventListener("change",(e)=>{
+        const type=e.target.dataset.type, id=e.target.dataset.id;
+        if(type==="topic") toggleTopic(id,e.target.checked);
+        else toggleSubtopic(e.target.dataset.topic,id,e.target.checked);
+        saveState(); renderAll();
       });
     });
 
-    subjectEl.appendChild(body);
-    container.appendChild(subjectEl);
-  });
-
-  // checkbox change
-  container.querySelectorAll("input[type='checkbox']").forEach(cb=>{
-    cb.onchange=(e)=>{
-      const type=e.target.dataset.type, id=e.target.dataset.id;
-      if(type==="topic") toggleTopic(id,e.target.checked);
-      else toggleSubtopic(e.target.dataset.topic,id,e.target.checked);
+    container.querySelectorAll("[data-add-topic]").forEach(btn=>btn.addEventListener("click",()=>{
+      const name = prompt("New topic name:");
+      if(!name) return;
+      const s = appState.syllabus.find(x=>x.id===btn.dataset.addTopic);
+      if(!s) return;
+      s.topics.push({id:uid(),name:name.trim(),done:false,subtopics:[]});
       saveState(); renderAll();
-    };
-  });
-
-  // CRUD actions
-  container.querySelectorAll("[data-add-topic]").forEach(btn=>btn.onclick=()=>{
-    const name = prompt("New topic name:");
-    if(!name) return;
-    const s = appState.syllabus.find(x=>x.id===btn.dataset.addTopic);
-    s.topics.push({id:uid(),name:name.trim(),done:false,subtopics:[]});
-    saveState(); renderAll();
-  });
-  container.querySelectorAll("[data-add-sub]").forEach(btn=>btn.onclick=()=>{
-    const name = prompt("New subtopic name:");
-    if(!name) return;
-    appState.syllabus.forEach(s=>s.topics.forEach(t=>{
-      if(t.id===btn.dataset.addSub) t.subtopics.push({id:uid(),name:name.trim(),done:false});
     }));
-    saveState(); renderAll();
-  });
-  container.querySelectorAll("[data-del-subject]").forEach(btn=>btn.onclick=()=>{
-    if(!confirm("Delete subject?")) return;
-    appState.syllabus = appState.syllabus.filter(s=>s.id!==btn.dataset.delSubject);
-    saveState(); renderAll();
-  });
-  container.querySelectorAll("[data-del-topic]").forEach(btn=>btn.onclick=()=>{
-    if(!confirm("Delete topic?")) return;
-    appState.syllabus.forEach(s=>s.topics=s.topics.filter(t=>t.id!==btn.dataset.delTopic));
-    saveState(); renderAll();
-  });
-  container.querySelectorAll("[data-del-sub]").forEach(btn=>btn.onclick=()=>{
-    if(!confirm("Delete subtopic?")) return;
-    const [topicId, subId] = btn.dataset.delSub.split("|");
-    appState.syllabus.forEach(s=>s.topics.forEach(t=>{
-      if(t.id===topicId) t.subtopics=t.subtopics.filter(x=>x.id!==subId);
+
+    container.querySelectorAll("[data-add-sub]").forEach(btn=>btn.addEventListener("click",()=>{
+      const name = prompt("New subtopic name:");
+      if(!name) return;
+      appState.syllabus.forEach(s=>s.topics.forEach(t=>{
+        if(t.id===btn.dataset.addSub) t.subtopics.push({id:uid(),name:name.trim(),done:false});
+      }));
+      saveState(); renderAll();
     }));
-    saveState(); renderAll();
-  });
-}
 
-/** -------- Study Plan: linked + custom -------- */
-function populateLinkSelectors(){
-  const subjSel = document.getElementById("linkSubject");
-  const topicSel = document.getElementById("linkTopic");
-  const subSel = document.getElementById("linkSubtopic");
+    container.querySelectorAll("[data-del-subject]").forEach(btn=>btn.addEventListener("click",()=>{
+      if(!confirm("Delete subject?")) return;
+      appState.syllabus = appState.syllabus.filter(s=>s.id!==btn.dataset.delSubject);
+      saveState(); renderAll();
+    }));
 
-  subjSel.innerHTML = appState.syllabus.map(s=>`<option value="${s.id}">${s.name}</option>`).join("") || `<option value="">No subject</option>`;
-  fillTopics();
-  function fillTopics(){
-    const s = appState.syllabus.find(x=>x.id===subjSel.value);
-    const topics = s ? s.topics : [];
-    topicSel.innerHTML = topics.map(t=>`<option value="${t.id}">${t.name}</option>`).join("") || `<option value="">No topic</option>`;
-    fillSubs();
+    container.querySelectorAll("[data-del-topic]").forEach(btn=>btn.addEventListener("click",()=>{
+      if(!confirm("Delete topic?")) return;
+      appState.syllabus.forEach(s=>s.topics=s.topics.filter(t=>t.id!==btn.dataset.delTopic));
+      saveState(); renderAll();
+    }));
+
+    container.querySelectorAll("[data-del-sub]").forEach(btn=>btn.addEventListener("click",()=>{
+      if(!confirm("Delete subtopic?")) return;
+      const [topicId, subId] = btn.dataset.delSub.split("|");
+      appState.syllabus.forEach(s=>s.topics.forEach(t=>{
+        if(t.id===topicId) t.subtopics=t.subtopics.filter(x=>x.id!==subId);
+      }));
+      saveState(); renderAll();
+    }));
   }
-  function fillSubs(){
-    subSel.innerHTML = `<option value="">(Optional) Subtopic</option>`;
-    const s = appState.syllabus.find(x=>x.id===subjSel.value);
-    const t = s?.topics.find(x=>x.id===topicSel.value);
-    (t?.subtopics||[]).forEach(st=>{
-      subSel.innerHTML += `<option value="${st.id}">${st.name}</option>`;
+
+  function populateLinkSelectors(){
+    const subjSel = byId("linkSubject");
+    const topicSel = byId("linkTopic");
+    const subSel = byId("linkSubtopic");
+    if(!subjSel || !topicSel || !subSel) return;
+
+    subjSel.innerHTML = appState.syllabus.map(s=>`<option value="${s.id}">${s.name}</option>`).join("") || `<option value="">No subject</option>`;
+
+    function fillTopics(){
+      const s = appState.syllabus.find(x=>x.id===subjSel.value);
+      const topics = s ? s.topics : [];
+      topicSel.innerHTML = topics.map(t=>`<option value="${t.id}">${t.name}</option>`).join("") || `<option value="">No topic</option>`;
+      fillSubs();
+    }
+    function fillSubs(){
+      subSel.innerHTML = `<option value="">(Optional) Subtopic</option>`;
+      const s = appState.syllabus.find(x=>x.id===subjSel.value);
+      const t = s?.topics.find(x=>x.id===topicSel.value);
+      (t?.subtopics||[]).forEach(st=>{
+        subSel.innerHTML += `<option value="${st.id}">${st.name}</option>`;
+      });
+    }
+
+    subjSel.onchange = fillTopics;
+    topicSel.onchange = fillSubs;
+    fillTopics();
+  }
+
+  function renderPlan(){
+    populateLinkSelectors();
+    const list = byId("planList");
+    if(!list) return;
+    list.innerHTML = "";
+
+    appState.plan.forEach(task=>{
+      const row = document.createElement("div");
+      row.className="plan-item";
+      const linkedLabel = task.linked ? `<span class="link-badge">Linked</span>` : `<span class="link-badge">Custom</span>`;
+      row.innerHTML = `
+        <input type="checkbox" ${task.done?"checked":""} data-id="${task.id}">
+        <span>${task.text}</span>
+        ${linkedLabel}
+        <span class="pill">${task.type}</span>
+        <button class="right" data-del="${task.id}">Delete</button>
+      `;
+      list.appendChild(row);
+    });
+
+    list.querySelectorAll("input[type='checkbox']").forEach(cb=>{
+      cb.addEventListener("change",(e)=>{
+        const task = appState.plan.find(t=>t.id===e.target.dataset.id);
+        if(!task) return;
+        task.done = e.target.checked;
+        if(task.done && task.linked){
+          const { topicId, subtopicId } = task.linked;
+          if(subtopicId) toggleSubtopic(topicId, subtopicId, true);
+          else toggleTopic(topicId, true);
+        }
+        saveState(); renderAll();
+      });
+    });
+
+    list.querySelectorAll("button[data-del]").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        appState.plan = appState.plan.filter(t=>t.id!==btn.dataset.del);
+        saveState(); renderPlan(); renderDashboard();
+      });
     });
   }
-  subjSel.onchange = fillTopics;
-  topicSel.onchange = fillSubs;
-}
 
-function renderPlan(){
-  populateLinkSelectors();
-  const list = document.getElementById("planList");
-  list.innerHTML = "";
-  appState.plan.forEach(task=>{
-    const row = document.createElement("div");
-    row.className="plan-item";
-    const linkedLabel = task.linked ? `<span class="link-badge">Linked</span>` : `<span class="link-badge">Custom</span>`;
-    row.innerHTML = `
-      <input type="checkbox" ${task.done?"checked":""} data-id="${task.id}">
-      <span>${task.text}</span>
-      ${linkedLabel}
-      <span class="pill">${task.type}</span>
-      <button class="right" data-del="${task.id}">Delete</button>
-    `;
-    list.appendChild(row);
-  });
+  function renderDashboard(){
+    const m = getOverallMetrics();
+    if(byId("overallPct")) byId("overallPct").textContent = m.percent + "%";
+    if(byId("overallBar")) byId("overallBar").style.width = m.percent + "%";
+    if(byId("doneCount")) byId("doneCount").textContent = m.done;
+    if(byId("totalCount")) byId("totalCount").textContent = m.total;
 
-  list.querySelectorAll("input[type='checkbox']").forEach(cb=>{
-    cb.onchange=(e)=>{
-      const task = appState.plan.find(t=>t.id===e.target.dataset.id);
-      task.done = e.target.checked;
+    const pd = appState.plan.filter(x=>x.done).length;
+    if(byId("planDone")) byId("planDone").textContent = pd;
+    if(byId("planTotal")) byId("planTotal").textContent = appState.plan.length;
 
-      // if linked and completed => check syllabus item
-      if(task.done && task.linked){
-        const { topicId, subtopicId } = task.linked;
-        if(subtopicId) toggleSubtopic(topicId, subtopicId, true);
-        else toggleTopic(topicId, true);
-      }
-      saveState(); renderAll();
-    };
-  });
-  list.querySelectorAll("button[data-del]").forEach(btn=>{
-    btn.onclick=()=>{
-      appState.plan = appState.plan.filter(t=>t.id!==btn.dataset.del);
-      saveState(); renderPlan(); renderDashboard();
-    };
-  });
-}
-
-/** -------- Dashboard -------- */
-function renderDashboard(){
-  const m = getOverallMetrics();
-  document.getElementById("overallPct").textContent = m.percent + "%";
-  document.getElementById("overallBar").style.width = m.percent + "%";
-  document.getElementById("doneCount").textContent = m.done;
-  document.getElementById("totalCount").textContent = m.total;
-  const pd = appState.plan.filter(x=>x.done).length;
-  document.getElementById("planDone").textContent = pd;
-  document.getElementById("planTotal").textContent = appState.plan.length;
-
-  const sp = document.getElementById("subjectProgressList");
-  sp.innerHTML = "";
-  appState.syllabus.forEach(s=>{
-    const pct = getSubjectCompletion(s);
-    const row = document.createElement("div");
-    row.style.marginBottom="10px";
-    row.innerHTML = `<div style="display:flex;justify-content:space-between"><span>${s.name}</span><span>${pct}%</span></div>
-                     <div class="bar"><span style="width:${pct}%"></span></div>`;
-    sp.appendChild(row);
-  });
-}
-
-/** -------- Progress logic -------- */
-function toggleTopic(topicId,val){
-  appState.syllabus.forEach(s=>s.topics.forEach(t=>{
-    if(t.id===topicId){ t.done=val; t.subtopics.forEach(st=>st.done=val); }
-  }));
-}
-function toggleSubtopic(topicId, subId, val){
-  appState.syllabus.forEach(s=>s.topics.forEach(t=>{
-    if(t.id===topicId){
-      const sub=t.subtopics.find(x=>x.id===subId);
-      if(sub) sub.done=val;
-      t.done = t.subtopics.length ? t.subtopics.every(x=>x.done) : t.done;
-    }
-  }));
-}
-function getSubjectCompletion(subject){
-  let total=0,done=0;
-  subject.topics.forEach(t=>{
-    total++; if(t.done) done++;
-    t.subtopics.forEach(st=>{ total++; if(st.done) done++; });
-  });
-  return total?Math.round(done*100/total):0;
-}
-function getOverallMetrics(){
-  let total=0,done=0;
-  appState.syllabus.forEach(s=>s.topics.forEach(t=>{
-    total++; if(t.done) done++;
-    t.subtopics.forEach(st=>{ total++; if(st.done) done++; });
-  }));
-  return {total,done,percent: total?Math.round(done*100/total):0};
-}
-
-/** -------- Global render -------- */
-function renderAll(){
-  document.body.classList.toggle("dark", !!appState.darkMode);
-  document.getElementById("darkToggle").checked = !!appState.darkMode;
-  renderSyllabus(); renderPlan(); renderDashboard();
-}
-
-/** -------- Events -------- */
-document.getElementById("parseTextBtn").onclick=()=>{
-  const text = document.getElementById("syllabusText").value.trim();
-  if(!text) return alert("Paste syllabus text first.");
-  appState.syllabus = parseSyllabusText(text);
-  saveState(); renderAll();
-};
-document.getElementById("parseFileBtn").onclick=async()=>{
-  const file = document.getElementById("fileInput").files[0];
-  if(!file) return alert("Choose .md or .pdf");
-  const ext = file.name.toLowerCase().split(".").pop();
-  let content = "";
-  if(ext==="md") content = await file.text();
-  else if(ext==="pdf") content = await parsePDF(file);
-  else return alert("Unsupported type");
-  document.getElementById("syllabusText").value = content;
-  appState.syllabus = parseSyllabusText(content);
-  saveState(); renderAll();
-};
-
-document.getElementById("searchInput").oninput=renderSyllabus;
-document.getElementById("expandAll").onclick=()=>{ appState.syllabus.forEach(s=>s.expanded=true); saveState(); renderSyllabus(); };
-document.getElementById("collapseAll").onclick=()=>{ appState.syllabus.forEach(s=>s.expanded=false); saveState(); renderSyllabus(); };
-
-document.getElementById("addSubjectBtn").onclick=()=>{
-  const name = prompt("Subject name?");
-  if(!name) return;
-  appState.syllabus.push({id:uid(),name:name.trim(),expanded:true,topics:[{id:uid(),name:"Core Topics",done:false,subtopics:[]}]});
-  saveState(); renderAll();
-};
-
-// add linked task
-document.getElementById("addLinkedTaskBtn").onclick=()=>{
-  const subjectId = document.getElementById("linkSubject").value;
-  const topicId = document.getElementById("linkTopic").value;
-  const subtopicId = document.getElementById("linkSubtopic").value || null;
-  const type = document.getElementById("taskType").value;
-
-  if(!subjectId || !topicId) return alert("Select subject and topic.");
-  const subject = appState.syllabus.find(s=>s.id===subjectId);
-  const topic = subject?.topics.find(t=>t.id===topicId);
-  const subtopic = subtopicId ? topic?.subtopics.find(s=>s.id===subtopicId) : null;
-
-  const text = subtopic
-    ? `[${subject.name}] ${subtopic.name}`
-    : `[${subject.name}] ${topic.name}`;
-
-  appState.plan.push({
-    id:uid(), text, type, done:false,
-    linked:{ subjectId, topicId, subtopicId }
-  });
-  saveState(); renderPlan(); renderDashboard();
-};
-
-// add custom task (free user choice)
-document.getElementById("addTaskBtn").onclick=()=>{
-  const text = document.getElementById("taskText").value.trim();
-  const type = document.getElementById("customTaskType").value;
-  if(!text) return;
-  appState.plan.push({id:uid(),text,type,done:false,linked:null});
-  document.getElementById("taskText").value = "";
-  saveState(); renderPlan(); renderDashboard();
-};
-
-document.getElementById("resetProgressBtn").onclick=()=>{
-  if(!confirm("Reset syllabus progress?")) return;
-  appState.syllabus.forEach(s=>s.topics.forEach(t=>{t.done=false;t.subtopics.forEach(st=>st.done=false);}));
-  saveState(); renderAll();
-};
-document.getElementById("resetPlanBtn").onclick=()=>{
-  if(!confirm("Reset study plan?")) return;
-  appState.plan = defaultPlan(); saveState(); renderAll();
-};
-document.getElementById("resetAllBtn").onclick=()=>{
-  if(!confirm("Reset all data?")) return;
-  resetAll();
-};
-
-document.getElementById("darkToggle").onchange=(e)=>{ appState.darkMode=e.target.checked; saveState(); renderAll(); };
-
-// export/import
-document.getElementById("exportBtn").onclick=()=>{
-  const blob = new Blob([JSON.stringify(appState,null,2)],{type:"application/json"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob); a.download = "upsc-tracker-backup.json"; a.click();
-  URL.revokeObjectURL(a.href);
-};
-document.getElementById("importBtn").onclick=async()=>{
-  const f = document.getElementById("importInput").files[0];
-  if(!f) return alert("Choose JSON");
-  try{
-    const data = JSON.parse(await f.text());
-    if(!data.syllabus || !data.plan) throw new Error();
-    appState = data; saveState(); renderAll(); alert("Import successful.");
-  }catch{
-    alert("Invalid backup file.");
+    const sp = byId("subjectProgressList");
+    if(!sp) return;
+    sp.innerHTML = "";
+    appState.syllabus.forEach(s=>{
+      const pct = getSubjectCompletion(s);
+      const row = document.createElement("div");
+      row.style.marginBottom="10px";
+      row.innerHTML = `<div style="display:flex;justify-content:space-between"><span>${s.name}</span><span>${pct}%</span></div>
+                       <div class="bar"><span style="width:${pct}%"></span></div>`;
+      sp.appendChild(row);
+    });
   }
-};
 
-// prefill text area with preloaded md content for reference/editing
-document.getElementById("syllabusText").value = PRELOADED_MD;
+  function renderAll(){
+    document.body.classList.toggle("dark", !!appState.darkMode);
+    if(byId("darkToggle")) byId("darkToggle").checked = !!appState.darkMode;
+    renderSyllabus(); renderPlan(); renderDashboard();
+  }
 
-renderAll();
+  on("parseTextBtn","click",()=>{
+    const text = (byId("syllabusText")?.value || "").trim();
+    if(!text) return alert("Paste syllabus text first.");
+    appState.syllabus = parseSyllabusText(text);
+    saveState(); renderAll();
+  });
+
+  on("parseFileBtn","click",async ()=>{
+    const file = byId("fileInput")?.files?.[0];
+    if(!file) return alert("Choose .md or .pdf");
+    const ext = file.name.toLowerCase().split(".").pop();
+    let content = "";
+    if(ext==="md") content = await file.text();
+    else if(ext==="pdf") content = await parsePDF(file);
+    else return alert("Unsupported type");
+    if(byId("syllabusText")) byId("syllabusText").value = content;
+    appState.syllabus = parseSyllabusText(content);
+    saveState(); renderAll();
+  });
+
+  on("searchInput","input",renderSyllabus);
+  on("expandAll","click",()=>{ appState.syllabus.forEach(s=>s.expanded=true); saveState(); renderSyllabus(); });
+  on("collapseAll","click",()=>{ appState.syllabus.forEach(s=>s.expanded=false); saveState(); renderSyllabus(); });
+
+  on("addSubjectBtn","click",()=>{
+    const name = prompt("Subject name?");
+    if(!name) return;
+    appState.syllabus.push({id:uid(),name:name.trim(),expanded:true,topics:[{id:uid(),name:"Core Topics",done:false,subtopics:[]}]});
+    saveState(); renderAll();
+  });
+
+  on("addLinkedTaskBtn","click",()=>{
+    const subjectId = byId("linkSubject")?.value;
+    const topicId = byId("linkTopic")?.value;
+    const subtopicId = byId("linkSubtopic")?.value || null;
+    const type = byId("taskType")?.value || "Daily";
+
+    if(!subjectId || !topicId) return alert("Select subject and topic.");
+    const subject = appState.syllabus.find(s=>s.id===subjectId);
+    const topic = subject?.topics.find(t=>t.id===topicId);
+    const subtopic = subtopicId ? topic?.subtopics.find(s=>s.id===subtopicId) : null;
+
+    const text = subtopic ? `[${subject?.name || "Subject"}] ${subtopic.name}` : `[${subject?.name || "Subject"}] ${topic?.name || "Topic"}`;
+
+    appState.plan.push({ id:uid(), text, type, done:false, linked:{ subjectId, topicId, subtopicId } });
+    saveState(); renderPlan(); renderDashboard();
+  });
+
+  on("addTaskBtn","click",()=>{
+    const text = (byId("taskText")?.value || "").trim();
+    const type = byId("customTaskType")?.value || "Daily";
+    if(!text) return;
+    appState.plan.push({id:uid(),text,type,done:false,linked:null});
+    if(byId("taskText")) byId("taskText").value = "";
+    saveState(); renderPlan(); renderDashboard();
+  });
+
+  on("resetProgressBtn","click",()=>{
+    if(!confirm("Reset syllabus progress?")) return;
+    appState.syllabus.forEach(s=>s.topics.forEach(t=>{ t.done=false; t.subtopics.forEach(st=>st.done=false); }));
+    saveState(); renderAll();
+  });
+
+  on("resetPlanBtn","click",()=>{
+    if(!confirm("Reset study plan?")) return;
+    appState.plan = defaultPlan(); saveState(); renderAll();
+  });
+
+  on("resetAllBtn","click",()=>{
+    if(!confirm("Reset all data?")) return;
+    resetAll();
+  });
+
+  on("darkToggle","change",(e)=>{ appState.darkMode = !!e.target.checked; saveState(); renderAll(); });
+
+  on("exportBtn","click",()=>{
+    const blob = new Blob([JSON.stringify(appState,null,2)],{type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "upsc-tracker-backup.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  on("importBtn","click",async ()=>{
+    const f = byId("importInput")?.files?.[0];
+    if(!f) return alert("Choose JSON");
+    try{
+      const data = JSON.parse(await f.text());
+      if(!data.syllabus || !data.plan) throw new Error();
+      appState = data;
+      saveState();
+      renderAll();
+      alert("Import successful.");
+    }catch{
+      alert("Invalid backup file.");
+    }
+  });
+
+  if(byId("syllabusText")) byId("syllabusText").value = PRELOADED_MD;
+  renderAll();
+});
 </script>
 </body>
 </html>
