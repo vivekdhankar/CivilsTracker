@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UPSC Syllabus Tracker</title>
+  <style>
+    :root{
+      --bg:#f6f7f9; --card:#fff; --text:#1f2937; --muted:#6b7280; --border:#e5e7eb;
+      --accent:#4f46e5; --accent-soft:#e8e7ff; --danger:#dc2626; --shadow:0 4px 18px rgba(0,0,0,.06);
+    }
+    body.dark{
+      --bg:#0f1115; --card:#161a22; --text:#e5e7eb; --muted:#9ca3af; --border:#2a3140;
+      --accent:#818cf8; --accent-soft:#23294a; --shadow:0 8px 24px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    .app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+    .sidebar{background:var(--card);border-right:1px solid var(--border);padding:18px;position:sticky;top:0;height:100vh}
+    .brand{font-weight:700;margin-bottom:18px;font-size:18px}
+    .nav-btn{width:100%;text-align:left;border:none;background:transparent;padding:10px 12px;border-radius:10px;margin-bottom:8px;color:var(--text);cursor:pointer}
+    .nav-btn.active,.nav-btn:hover{background:var(--accent-soft)}
+    .small{font-size:12px;color:var(--muted)}
+    main{padding:18px}
+    .page{display:none}.page.active{display:block}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:var(--shadow)}
+    .kpi{grid-column:span 4}
+    .kpi h3{margin:0 0 8px;font-size:14px;color:var(--muted)}
+    .kpi .value{font-size:28px;font-weight:700}
+    .bar{width:100%;height:10px;border-radius:999px;background:var(--border);overflow:hidden}
+    .bar>span{display:block;height:100%;background:var(--accent);width:0;transition:width .35s ease}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+    input,textarea,select,button{border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:10px;padding:8px 10px;font:inherit}
+    textarea{width:100%;min-height:120px;resize:vertical}
+    button{cursor:pointer}
+    .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+    .btn-danger{color:var(--danger);border-color:rgba(220,38,38,.35)}
+    .btn-sm{padding:4px 8px;font-size:12px}
+    .subject{border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;background:var(--card)}
+    .subject-head{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);background:rgba(0,0,0,.015)}
+    body.dark .subject-head{background:rgba(255,255,255,.02)}
+    .subject-title{display:flex;align-items:center;gap:8px;cursor:pointer}
+    .topic,.subtopic{padding:6px 12px}
+    .topic{border-top:1px dashed var(--border)}
+    .subtopic{padding-left:30px;color:var(--muted)}
+    .topic-row,.subtopic-row{display:flex;align-items:center;gap:8px}
+    .actions,.subject-actions{margin-left:auto;display:flex;gap:6px}
+    .plan-item{display:flex;gap:8px;align-items:center;border:1px solid var(--border);border-radius:10px;padding:8px;margin-bottom:8px}
+    .pill{font-size:12px;padding:3px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+    .right{margin-left:auto}
+    .subject-progress{min-width:140px}
+    .link-badge{font-size:11px;padding:2px 8px;border:1px solid var(--border);border-radius:999px;color:var(--muted)}
+    @media (max-width:900px){
+      .app{grid-template-columns:1fr}
+      .sidebar{position:static;height:auto}
+      .kpi{grid-column:span 12}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">UPSC Tracker</div>
+    <button class="nav-btn active" data-page="dashboard">Dashboard</button>
+    <button class="nav-btn" data-page="syllabus">Syllabus Tracker</button>
+    <button class="nav-btn" data-page="plan">Study Plan</button>
+    <button class="nav-btn" data-page="settings">Settings</button>
+    <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
+    <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="darkToggle"/><span>Dark mode</span></label>
+    <p class="small">Auto-saved via localStorage</p>
+  </aside>
+
+  <main>
+    <section id="dashboard" class="page active">
+      <h2>Dashboard</h2>
+      <div class="grid">
+        <div class="card kpi"><h3>Overall Completion</h3><div class="value" id="overallPct">0%</div><div class="bar"><span id="overallBar"></span></div></div>
+        <div class="card kpi"><h3>Completed Items</h3><div class="value"><span id="doneCount">0</span>/<span id="totalCount">0</span></div><div class="small">Topics + subtopics</div></div>
+        <div class="card kpi"><h3>Study Plan Tasks</h3><div class="value"><span id="planDone">0</span>/<span id="planTotal">0</span></div><div class="small">Daily/weekly custom + linked tasks</div></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h3 style="margin-top:0">Subject-wise Progress</h3>
+        <div id="subjectProgressList"></div>
+      </div>
+    </section>
+
+    <section id="syllabus" class="page">
+      <h2>Syllabus Tracker</h2>
+      <div class="card">
+        <div class="toolbar">
+          <input type="file" id="fileInput" accept=".md,.pdf,text/markdown,application/pdf"/>
+          <button id="parseFileBtn">Load File</button>
+          <button id="parseTextBtn">Parse Pasted Text</button>
+          <input type="text" id="searchInput" placeholder="Search subject/topic/subtopic..." />
+          <button id="expandAll">Expand All</button>
+          <button id="collapseAll">Collapse All</button>
+          <button id="addSubjectBtn" class="btn-primary">+ Subject</button>
+        </div>
+        <textarea id="syllabusText" placeholder="Paste markdown syllabus"></textarea>
+        <p class="small">Preloaded from your latest history_notes.md style (# Subject, lines as topic list).</p>
+      </div>
+      <div style="margin-top:12px" id="syllabusContainer"></div>
+    </section>
+
+    <section id="plan" class="page">
+      <h2>Study Plan</h2>
+      <div class="card">
+        <h3 style="margin-top:0">Add Linked Syllabus Task</h3>
+        <div class="toolbar">
+          <select id="linkSubject"></select>
+          <select id="linkTopic"></select>
+          <select id="linkSubtopic"><option value="">(Optional) Subtopic</option></select>
+          <select id="taskType"><option value="Daily">Daily</option><option value="Weekly">Weekly</option></select>
+          <button class="btn-primary" id="addLinkedTaskBtn">Add Linked Task</button>
+        </div>
+        <p class="small">When completed, linked task automatically checks syllabus item.</p>
+        <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
+        <h3 style="margin-top:0">Add Custom Task (not in syllabus)</h3>
+        <div class="toolbar">
+          <input id="taskText" placeholder="e.g., Newspaper notes + PYQ analysis" />
+          <select id="customTaskType"><option value="Daily">Daily</option><option value="Weekly">Weekly</option></select>
+          <button class="btn-primary" id="addTaskBtn">Add Custom Task</button>
+        </div>
+        <div id="planList"></div>
+      </div>
+    </section>
+
+    <section id="settings" class="page">
+      <h2>Settings</h2>
+      <div class="card">
+        <button class="btn-danger" id="resetProgressBtn">Reset Syllabus Progress</button>
+        <button class="btn-danger" id="resetPlanBtn">Reset Study Plan</button>
+        <button class="btn-danger" id="resetAllBtn">Reset All Data</button>
+        <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
+        <button id="exportBtn">Export JSON</button>
+        <input type="file" id="importInput" accept=".json,application/json"/>
+        <button id="importBtn">Import JSON</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const STORAGE_KEY = "upscTrackerState";
+let appState = loadState();
+function uid(){ return Math.random().toString(36).slice(2,9); }
+
+/**
+ * PRELOADED SYLLABUS (history_notes.md format):
+ * # Subject
+ * each line under subject => subtopic
+ * stored as Subject -> one default Topic Group ("Core Topics") -> Subtopics
+ */
+const PRELOADED_MD = `# Ancient History
+Pre-Historic India
+Indus Valley Civilization
+Vedic Period
+Rise of Mahajan padas
+Mauryan Empire
+Post-Mauryan Empire
+Gupta Empire
+Harsha's Empire
+Regional Power
+Cultural Development
+
+# Medieval History
+Early Medieval India (8th to 12th Centuries)
+Delhi Sultanate (1206-1526)
+Vijayanagar and Bahmani Kingdom
+Central Asian Politics & Babur's Advance into India
+Struggle for Empire in North India
+Establishment of the North India Empire
+Consolidation and Expansion under Akbar (1556-1605)
+State and Government under Akbar
+The Deccan and the Mughal (up to 1657)
+Mughal Foreign Policy
+Indian in the First Half of the 17th Century
+Aurangzeb: Religious Policies and North India
+Climax and Crisis of the Mughal Empire
+Northen India in the First half of 18th Century
+The Maratha Bid for Supremacy
+Rise of Regional Powers in the 18th Century
+Cultural Developments in Medieval India
+
+# Modern History
+India on the Eve of British conquest (1700-1757)
+British Conquest and Consolidation (1757-1857)
+The Great Revolt 1857
+Socio-Religious Reform Movement (18th-19th centuries)
+Early Nationalist Movement (1858-1905)
+Indian National Movement (1905-1918)
+Gandhian Era and Mass Movement (1917-1935)
+Towards Freedom (1935-1947)
+Section Movements and Alternative Strands
+Ideas and Ideologies in the indian National Movement
+Cultural Awakening and Education
+Constitutional Development
+Princely States & Freedom Struggle
+Key Personalities and Their Contributions
+Important Organizations, Events and Documents
+
+# Post Independence India
+Reorganization of States
+Linguistics Regionalism in India
+Tribal Issues and Policy Consolidation
+Issues of Women and Evolution of Women's Movement
+Problem of Caste and Social Consolidation
+Communalism and Social consolidation
+Issues of Linguistic Minorites
+Overview of Economic Development Since Independence
+Agriculture
+Industry
+New Economic Policy
+Post Independence Policy of Science and Technology
+Political development
+Social and Cultural Chages
+Education and Health
+
+# World History
+Dawn of the Modern Era (15th-18th Centuries)
+Age of Revolution (Late 18th - Early 19th Centuries)
+Nationalism and national Building (19th Centuries)
+Imperialism and Global Expansion (19th-Early 20th Centuries)
+The United States: From colony to superpower
+World War I and its Aftermath
+Russian Revolutions and the Soviet Era
+Interwar Period (1919-1939)
+World War II
+Decolonization and Independence Movement
+The Cold War Era
+The Post - Cold war World
+Political and Economic Systems
+Contemporary Global Issues
+Cultural and Social Movement
+
+# Art and Culture
+Prehistoric and Ancient Indian Art
+Classical and Medieval Indian Architecture
+Indo-Islamic and Colonial Architecture
+Visual Arts Through the Ages
+Ceramic and Metallurgical Traditions
+Performing Arts if India
+Martial Arts and Physical Traditions
+Modern Performative and Visual Media
+Religious and Philosophical Traditions
+Language and Literature
+Scientific and Technological Heritage
+Culinary and Textile Tradition
+Festivals, Fairs and Social Practice
+Cultural Institutions and Heritage Management
+India Diaspora and Global Cultural Impact
+Contemporary Issues in Indian Culture
+
+# Physical Geography
+Origin and Evolution of Earth
+Earth's Motion and Coordinate Systems
+Interior of the Earth and Seismology
+Geology and Rock Cycle
+Geomorphic Processes and Landforms
+Atmosphere and Climate
+Hydrosphere and Oceanography
+Forests
+
+# Physical Geography of India
+Physiography of India
+Drainage System
+Climate
+Soils in India
+Natural Vegetation and Wildlife
+Mineral and Energy Resources
+Marine Geography of India
+Agricultural Geography
+
+# Human Geography
+Population Dynamics and Demography
+Migration and Mobility
+Urbanization and Urban Geography
+Settlement Geography
+Population Geography of India
+Human Development and Social Geography
+
+# Indian Society
+Salient features of Indian Society
+Unity in Diversity of India
+Women and Society
+Poverty and Development Issues
+Globalization and Indian Society
+Social Empowerment and Social Justice
+Communalism and Secularism
+Regionalism and National Integration
+Urbanization and Its Impact
+Caste System in Contemporary India
+Social Movements in Modern India
+Science, technology and Society
+Education and Social Change
+Health and Society
+Population and Demographic Dividend
+
+# Social Justice
+Welfare Scheme for Vulnerable Sections
+Skill Development and Entrepreneurship
+Social security and financial inclusion
+Health and Education
+Poverty and hunger
+Scheduled and Tribal Areas
+Rural and Urban Development
+Social Issues and Justice
+Labor Reforms and Worker's Rights
+Social Movements and Civil Society
+
+# Indian Polity
+Constitutional Framework
+System of Government
+Central Government
+State Government
+Judiciary
+Local Government
+Union Territories and Special Areas
+Constitutional Bodies
+Non-constitutional Bodies
+Other constitutional Dimensions
+Political Dynamics
+
+# Governance
+Governance and Good Governance
+Development Process and Stakeholders
+Accountability Mechanism
+Decentralization and Local Governance
+Civil Services in Democracy
+Constitutional Bodies and Statutory Institutions
+Electoral System and Reforms
+Political Parties and Pressure Groups
+Vulnerable Sections and Inclusive Governance
+Contemporary Issues in Governance
+Governance Innovations and Best Practices
+
+# International Relations
+Evolution and Key Principles
+Determinants of India's Foreign Policy
+Non-Aligned Movement (NAM) and NAM 2.0
+India's Nuclear Doctrine
+Evolution of Neighborhood Policy
+Look East Policy and Act East Policy
+Look West Policy
+Indian Diaspora: Role, Safety Issues and Welfare Schemes
+India - Neighborhood Relations
+India - Russian Relations
+India - China Relations
+India - USA Relations
+India - CIS Countries of Central Asia Relations
+India - East Asia Relations
+India - West Asia Relations
+India - Southeast Asia Relations
+India - Africa Relations
+India - Australia Relations
+India - France Relations
+India - Germany Relations
+India - United Kingdom Relations
+The World Trade Organization (WTO)
+International Monetary Fund (IMF)
+Nuclear Security and Related Organizations
+BRICS
+EU
+BIMSTEC
+IBSA
+SAARC
+India - ASEAN Economic Cooperation
+Shanghai Cooperation Organization
+G20
+Commonwealth Nation
+United Nation & Its Bodies
+Special UN Agencies
+World Bank
+International Criminal Court (ICC)
+World Economic Forum (WEF)
+
+# Indian Economy
+Indian Economy: Historical Perspective
+Planning and Development
+National income and Economic Indicators
+Sustainable and Inclusive Growth
+Agriculture and Rural Economy
+Industrial Sector
+Service Sector
+Employment and Skill Development
+Resource Mobilization and Investment
+Government Budgeting
+Fiscal Policy
+Monetary policy
+Financial System
+Banking Sector
+External Sector
+International Economic Organizations
+Current Economic Issues and Government Initiatives
+Environment Economics and Sustainability
+Poverty and Inequality
+Federalism and Economic Governance
+
+# Infrastructure
+Industrial Policy and Development in India
+Transport Infrastructure
+Energy Infrastructure
+Telecommunications and Digital Infrastructure
+Urban and Rural Infrastructure
+Infrastructure Financing and Implementation
+Cross-cutting Themes and Emerging Trends
+Infrastructure Governance and Policy
+
+# Agriculture
+Agriculture and The Indian Economy
+Agriculture Policy and Government Interventions
+Sustainable Agriculture and Climate change
+Agriculture Finance and Risk Management
+Agriculture Marketing and Food Processing
+Technology in Agriculture
+Allied Sector
+Agricultural Research, Education and Extension
+Challenges in Indian Agriculture
+Emerging Trends and future
+Agriculture and International Trade
+
+# Ecology and Environment
+Biotechnology and Genetic Engineering
+Space Technology and Exploration
+Defense and Strategic Technologies
+Nuclear Technology and Energy
+Information Technology and Artificial Intelligence
+Renewable Energy and Sustainability
+Nanotechnology and Advanced Materials
+Robotic and Automation
+Health and Medical Technologies
+Environmental Technologies and Climate change Mitigation
+Emerging and Disruptive Technologies
+Science and Technology Policy and Ethics
+
+# Security
+Internal Security Challenges
+Naxalist and Left-Wing Extremism
+Terrorism in Hinterland & Border Areas
+J&K Separatism
+North East Insurgency
+Communal Violence
+Caste-base Violence
+External Influences on Internal Security
+Institutional Framework to Tackle Challenges of Internal Security
+Legal Framework for Internal Security
+Cyber Security and Information Warfare
+Economic Security
+Border Management and Security
+Organized Crime and Terrorism
+Security Force and Agencies
+International Cooperation in Security
+Maritime Security
+Critical Infrastructure Protection
+Intelligence Reforms
+
+# Disaster Management
+Introduction to Disaster Management
+Natural Disasters: Causes, Impact, and Management Strategies
+Human - Induced Disaster Prevention and Mitigation
+Legal and Institutional Framework for Disaster Management in India
+Disaster Management Plans and International Cooperation
+Early Warning Systems and Technology in Disaster Management
+Community - Based Disaster Risk Reduction and Preparedness
+Financial Aspects and Risk transfer mechanism
+Case Studies and Lessons Learned
+Emerging Challenges in Disaster management
+Post-Disaster Recovery and Reconstruction
+
+# Ethics, Integrity & Aptitude
+Ethics and human Interface
+Human Values
+Role Family, Society and Educational Institutions in Inculcating Values
+Attitude
+Aptitude and Foundation Values for Civil Services
+Emotional Intelligence
+Contribution of Moral thinkers and Philosophers
+Public/Civil Service Values and Ethics in Public Administration
+Probity in Governance
+Environmental Ethics
+Professional Ethics
+Applied Ethics (Case Studies)
+Ethical Decision - Making Framework
+Ethics in the Digital Age
+Global Ethics and International Relations
+Ethics and Law
+
+# Science and Technology
+Recent Advancements in Science and Technology
+Everyday Applications of Science
+Information Technology and Computers
+AI, ML and Cloud Computing
+Internet of Things (IoT)
+Quantum Computing
+Cybersecurity
+Semiconductors
+Space Technology
+Biotechnology and Health
+Defense Technology
+Nuclear Technology
+Nanotechnology and Materials Science
+Renewable Energy and Sustainability
+Intellectual Property Rights (IPR)`;
+
+/** -------- Defaults -------- */
+function parseSubjectWiseMD(text){
+  const lines = text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  const subjects = [];
+  let current = null;
+
+  for(const line of lines){
+    if(line.startsWith("# ")){
+      current = { id:uid(), name:line.slice(2).trim(), expanded:true, topics:[
+        { id:uid(), name:"Core Topics", done:false, subtopics:[] }
+      ]};
+      subjects.push(current);
+    }else{
+      if(!current){
+        current = { id:uid(), name:"General", expanded:true, topics:[{id:uid(),name:"Core Topics",done:false,subtopics:[]}] };
+        subjects.push(current);
+      }
+      current.topics[0].subtopics.push({ id:uid(), name:line, done:false });
+    }
+  }
+  return subjects;
+}
+
+function defaultSyllabus(){ return parseSubjectWiseMD(PRELOADED_MD); }
+function defaultPlan(){
+  return [
+    {id:uid(), text:"Set weekly targets", type:"Weekly", done:false, linked:null},
+    {id:uid(), text:"Daily revision + PYQ", type:"Daily", done:false, linked:null}
+  ];
+}
+
+/** -------- State -------- */
+function loadState(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw){ try { return JSON.parse(raw); } catch(e){} }
+  return { syllabus:defaultSyllabus(), plan:defaultPlan(), darkMode:false };
+}
+function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); }
+function resetAll(){ appState={ syllabus:defaultSyllabus(), plan:defaultPlan(), darkMode:false }; saveState(); renderAll(); }
+
+/** -------- Navigation -------- */
+document.querySelectorAll(".nav-btn").forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    document.getElementById(btn.dataset.page).classList.add("active");
+  }
+});
+
+/** -------- Parser for uploaded/pasted content -------- */
+function cleanLine(line){
+  return line.replace(/\[cite_start\]/g,"").replace(/\[cite:[^\]]*\]/g,"").replace(/\*\*/g,"").trim();
+}
+function parseSyllabusText(text){
+  // For your new format, we parse as subject-wise list:
+  return parseSubjectWiseMD(text.split(/\r?\n/).map(cleanLine).join("\n"));
+}
+async function parsePDF(file){
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let txt = "";
+  for(let i=0;i<bytes.length;i++) txt += (bytes[i]>=32&&bytes[i]<=126)?String.fromCharCode(bytes[i]):" ";
+  return txt.replace(/\s+/g," ").split(". ").slice(0,500).join("\n");
+}
+
+/** -------- Render Syllabus -------- */
+function renderSyllabus(){
+  const q = document.getElementById("searchInput").value.trim().toLowerCase();
+  const container = document.getElementById("syllabusContainer");
+  container.innerHTML = "";
+
+  appState.syllabus.forEach(subject=>{
+    const subjectMatches = subject.name.toLowerCase().includes(q);
+    const subjectEl = document.createElement("div");
+    subjectEl.className = "subject";
+
+    const head = document.createElement("div");
+    head.className = "subject-head";
+
+    const title = document.createElement("div");
+    title.className = "subject-title";
+    title.innerHTML = `<strong>${subject.name}</strong>`;
+    title.onclick = ()=>{ subject.expanded = !subject.expanded; saveState(); renderSyllabus(); };
+
+    const pct = getSubjectCompletion(subject);
+    const right = document.createElement("div");
+    right.className = "subject-actions";
+    right.innerHTML = `
+      <div class="subject-progress"><div class="bar"><span style="width:${pct}%"></span></div><div class="small">${pct}%</div></div>
+      <button class="btn-sm" data-add-topic="${subject.id}">+ Topic</button>
+      <button class="btn-sm btn-danger" data-del-subject="${subject.id}">Delete</button>
+    `;
+
+    head.append(title,right);
+    subjectEl.appendChild(head);
+
+    const body = document.createElement("div");
+    body.style.display = subject.expanded ? "block" : "none";
+
+    subject.topics.forEach(topic=>{
+      const topicMatches = topic.name.toLowerCase().includes(q);
+      const subMatches = topic.subtopics.some(s=>s.name.toLowerCase().includes(q));
+      if(q && !(subjectMatches || topicMatches || subMatches)) return;
+
+      const topicDiv = document.createElement("div");
+      topicDiv.className = "topic";
+      topicDiv.innerHTML = `
+        <div class="topic-row">
+          <label><input type="checkbox" ${topic.done ? "checked":""} data-type="topic" data-id="${topic.id}"> ${topic.name}</label>
+          <div class="actions">
+            <button class="btn-sm" data-add-sub="${topic.id}">+ Subtopic</button>
+            <button class="btn-sm btn-danger" data-del-topic="${topic.id}">Delete</button>
+          </div>
+        </div>
+      `;
+      body.appendChild(topicDiv);
+
+      topic.subtopics.forEach(sub=>{
+        if(q && !(subjectMatches || topicMatches || sub.name.toLowerCase().includes(q))) return;
+        const subDiv = document.createElement("div");
+        subDiv.className = "subtopic";
+        subDiv.innerHTML = `
+          <div class="subtopic-row">
+            <label><input type="checkbox" ${sub.done ? "checked":""} data-type="sub" data-topic="${topic.id}" data-id="${sub.id}"> ${sub.name}</label>
+            <div class="actions"><button class="btn-sm btn-danger" data-del-sub="${topic.id}|${sub.id}">Delete</button></div>
+          </div>
+        `;
+        body.appendChild(subDiv);
+      });
+    });
+
+    subjectEl.appendChild(body);
+    container.appendChild(subjectEl);
+  });
+
+  // checkbox change
+  container.querySelectorAll("input[type='checkbox']").forEach(cb=>{
+    cb.onchange=(e)=>{
+      const type=e.target.dataset.type, id=e.target.dataset.id;
+      if(type==="topic") toggleTopic(id,e.target.checked);
+      else toggleSubtopic(e.target.dataset.topic,id,e.target.checked);
+      saveState(); renderAll();
+    };
+  });
+
+  // CRUD actions
+  container.querySelectorAll("[data-add-topic]").forEach(btn=>btn.onclick=()=>{
+    const name = prompt("New topic name:");
+    if(!name) return;
+    const s = appState.syllabus.find(x=>x.id===btn.dataset.addTopic);
+    s.topics.push({id:uid(),name:name.trim(),done:false,subtopics:[]});
+    saveState(); renderAll();
+  });
+  container.querySelectorAll("[data-add-sub]").forEach(btn=>btn.onclick=()=>{
+    const name = prompt("New subtopic name:");
+    if(!name) return;
+    appState.syllabus.forEach(s=>s.topics.forEach(t=>{
+      if(t.id===btn.dataset.addSub) t.subtopics.push({id:uid(),name:name.trim(),done:false});
+    }));
+    saveState(); renderAll();
+  });
+  container.querySelectorAll("[data-del-subject]").forEach(btn=>btn.onclick=()=>{
+    if(!confirm("Delete subject?")) return;
+    appState.syllabus = appState.syllabus.filter(s=>s.id!==btn.dataset.delSubject);
+    saveState(); renderAll();
+  });
+  container.querySelectorAll("[data-del-topic]").forEach(btn=>btn.onclick=()=>{
+    if(!confirm("Delete topic?")) return;
+    appState.syllabus.forEach(s=>s.topics=s.topics.filter(t=>t.id!==btn.dataset.delTopic));
+    saveState(); renderAll();
+  });
+  container.querySelectorAll("[data-del-sub]").forEach(btn=>btn.onclick=()=>{
+    if(!confirm("Delete subtopic?")) return;
+    const [topicId, subId] = btn.dataset.delSub.split("|");
+    appState.syllabus.forEach(s=>s.topics.forEach(t=>{
+      if(t.id===topicId) t.subtopics=t.subtopics.filter(x=>x.id!==subId);
+    }));
+    saveState(); renderAll();
+  });
+}
+
+/** -------- Study Plan: linked + custom -------- */
+function populateLinkSelectors(){
+  const subjSel = document.getElementById("linkSubject");
+  const topicSel = document.getElementById("linkTopic");
+  const subSel = document.getElementById("linkSubtopic");
+
+  subjSel.innerHTML = appState.syllabus.map(s=>`<option value="${s.id}">${s.name}</option>`).join("") || `<option value="">No subject</option>`;
+  fillTopics();
+  function fillTopics(){
+    const s = appState.syllabus.find(x=>x.id===subjSel.value);
+    const topics = s ? s.topics : [];
+    topicSel.innerHTML = topics.map(t=>`<option value="${t.id}">${t.name}</option>`).join("") || `<option value="">No topic</option>`;
+    fillSubs();
+  }
+  function fillSubs(){
+    subSel.innerHTML = `<option value="">(Optional) Subtopic</option>`;
+    const s = appState.syllabus.find(x=>x.id===subjSel.value);
+    const t = s?.topics.find(x=>x.id===topicSel.value);
+    (t?.subtopics||[]).forEach(st=>{
+      subSel.innerHTML += `<option value="${st.id}">${st.name}</option>`;
+    });
+  }
+  subjSel.onchange = fillTopics;
+  topicSel.onchange = fillSubs;
+}
+
+function renderPlan(){
+  populateLinkSelectors();
+  const list = document.getElementById("planList");
+  list.innerHTML = "";
+  appState.plan.forEach(task=>{
+    const row = document.createElement("div");
+    row.className="plan-item";
+    const linkedLabel = task.linked ? `<span class="link-badge">Linked</span>` : `<span class="link-badge">Custom</span>`;
+    row.innerHTML = `
+      <input type="checkbox" ${task.done?"checked":""} data-id="${task.id}">
+      <span>${task.text}</span>
+      ${linkedLabel}
+      <span class="pill">${task.type}</span>
+      <button class="right" data-del="${task.id}">Delete</button>
+    `;
+    list.appendChild(row);
+  });
+
+  list.querySelectorAll("input[type='checkbox']").forEach(cb=>{
+    cb.onchange=(e)=>{
+      const task = appState.plan.find(t=>t.id===e.target.dataset.id);
+      task.done = e.target.checked;
+
+      // if linked and completed => check syllabus item
+      if(task.done && task.linked){
+        const { topicId, subtopicId } = task.linked;
+        if(subtopicId) toggleSubtopic(topicId, subtopicId, true);
+        else toggleTopic(topicId, true);
+      }
+      saveState(); renderAll();
+    };
+  });
+  list.querySelectorAll("button[data-del]").forEach(btn=>{
+    btn.onclick=()=>{
+      appState.plan = appState.plan.filter(t=>t.id!==btn.dataset.del);
+      saveState(); renderPlan(); renderDashboard();
+    };
+  });
+}
+
+/** -------- Dashboard -------- */
+function renderDashboard(){
+  const m = getOverallMetrics();
+  document.getElementById("overallPct").textContent = m.percent + "%";
+  document.getElementById("overallBar").style.width = m.percent + "%";
+  document.getElementById("doneCount").textContent = m.done;
+  document.getElementById("totalCount").textContent = m.total;
+  const pd = appState.plan.filter(x=>x.done).length;
+  document.getElementById("planDone").textContent = pd;
+  document.getElementById("planTotal").textContent = appState.plan.length;
+
+  const sp = document.getElementById("subjectProgressList");
+  sp.innerHTML = "";
+  appState.syllabus.forEach(s=>{
+    const pct = getSubjectCompletion(s);
+    const row = document.createElement("div");
+    row.style.marginBottom="10px";
+    row.innerHTML = `<div style="display:flex;justify-content:space-between"><span>${s.name}</span><span>${pct}%</span></div>
+                     <div class="bar"><span style="width:${pct}%"></span></div>`;
+    sp.appendChild(row);
+  });
+}
+
+/** -------- Progress logic -------- */
+function toggleTopic(topicId,val){
+  appState.syllabus.forEach(s=>s.topics.forEach(t=>{
+    if(t.id===topicId){ t.done=val; t.subtopics.forEach(st=>st.done=val); }
+  }));
+}
+function toggleSubtopic(topicId, subId, val){
+  appState.syllabus.forEach(s=>s.topics.forEach(t=>{
+    if(t.id===topicId){
+      const sub=t.subtopics.find(x=>x.id===subId);
+      if(sub) sub.done=val;
+      t.done = t.subtopics.length ? t.subtopics.every(x=>x.done) : t.done;
+    }
+  }));
+}
+function getSubjectCompletion(subject){
+  let total=0,done=0;
+  subject.topics.forEach(t=>{
+    total++; if(t.done) done++;
+    t.subtopics.forEach(st=>{ total++; if(st.done) done++; });
+  });
+  return total?Math.round(done*100/total):0;
+}
+function getOverallMetrics(){
+  let total=0,done=0;
+  appState.syllabus.forEach(s=>s.topics.forEach(t=>{
+    total++; if(t.done) done++;
+    t.subtopics.forEach(st=>{ total++; if(st.done) done++; });
+  }));
+  return {total,done,percent: total?Math.round(done*100/total):0};
+}
+
+/** -------- Global render -------- */
+function renderAll(){
+  document.body.classList.toggle("dark", !!appState.darkMode);
+  document.getElementById("darkToggle").checked = !!appState.darkMode;
+  renderSyllabus(); renderPlan(); renderDashboard();
+}
+
+/** -------- Events -------- */
+document.getElementById("parseTextBtn").onclick=()=>{
+  const text = document.getElementById("syllabusText").value.trim();
+  if(!text) return alert("Paste syllabus text first.");
+  appState.syllabus = parseSyllabusText(text);
+  saveState(); renderAll();
+};
+document.getElementById("parseFileBtn").onclick=async()=>{
+  const file = document.getElementById("fileInput").files[0];
+  if(!file) return alert("Choose .md or .pdf");
+  const ext = file.name.toLowerCase().split(".").pop();
+  let content = "";
+  if(ext==="md") content = await file.text();
+  else if(ext==="pdf") content = await parsePDF(file);
+  else return alert("Unsupported type");
+  document.getElementById("syllabusText").value = content;
+  appState.syllabus = parseSyllabusText(content);
+  saveState(); renderAll();
+};
+
+document.getElementById("searchInput").oninput=renderSyllabus;
+document.getElementById("expandAll").onclick=()=>{ appState.syllabus.forEach(s=>s.expanded=true); saveState(); renderSyllabus(); };
+document.getElementById("collapseAll").onclick=()=>{ appState.syllabus.forEach(s=>s.expanded=false); saveState(); renderSyllabus(); };
+
+document.getElementById("addSubjectBtn").onclick=()=>{
+  const name = prompt("Subject name?");
+  if(!name) return;
+  appState.syllabus.push({id:uid(),name:name.trim(),expanded:true,topics:[{id:uid(),name:"Core Topics",done:false,subtopics:[]}]});
+  saveState(); renderAll();
+};
+
+// add linked task
+document.getElementById("addLinkedTaskBtn").onclick=()=>{
+  const subjectId = document.getElementById("linkSubject").value;
+  const topicId = document.getElementById("linkTopic").value;
+  const subtopicId = document.getElementById("linkSubtopic").value || null;
+  const type = document.getElementById("taskType").value;
+
+  if(!subjectId || !topicId) return alert("Select subject and topic.");
+  const subject = appState.syllabus.find(s=>s.id===subjectId);
+  const topic = subject?.topics.find(t=>t.id===topicId);
+  const subtopic = subtopicId ? topic?.subtopics.find(s=>s.id===subtopicId) : null;
+
+  const text = subtopic
+    ? `[${subject.name}] ${subtopic.name}`
+    : `[${subject.name}] ${topic.name}`;
+
+  appState.plan.push({
+    id:uid(), text, type, done:false,
+    linked:{ subjectId, topicId, subtopicId }
+  });
+  saveState(); renderPlan(); renderDashboard();
+};
+
+// add custom task (free user choice)
+document.getElementById("addTaskBtn").onclick=()=>{
+  const text = document.getElementById("taskText").value.trim();
+  const type = document.getElementById("customTaskType").value;
+  if(!text) return;
+  appState.plan.push({id:uid(),text,type,done:false,linked:null});
+  document.getElementById("taskText").value = "";
+  saveState(); renderPlan(); renderDashboard();
+};
+
+document.getElementById("resetProgressBtn").onclick=()=>{
+  if(!confirm("Reset syllabus progress?")) return;
+  appState.syllabus.forEach(s=>s.topics.forEach(t=>{t.done=false;t.subtopics.forEach(st=>st.done=false);}));
+  saveState(); renderAll();
+};
+document.getElementById("resetPlanBtn").onclick=()=>{
+  if(!confirm("Reset study plan?")) return;
+  appState.plan = defaultPlan(); saveState(); renderAll();
+};
+document.getElementById("resetAllBtn").onclick=()=>{
+  if(!confirm("Reset all data?")) return;
+  resetAll();
+};
+
+document.getElementById("darkToggle").onchange=(e)=>{ appState.darkMode=e.target.checked; saveState(); renderAll(); };
+
+// export/import
+document.getElementById("exportBtn").onclick=()=>{
+  const blob = new Blob([JSON.stringify(appState,null,2)],{type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "upsc-tracker-backup.json"; a.click();
+  URL.revokeObjectURL(a.href);
+};
+document.getElementById("importBtn").onclick=async()=>{
+  const f = document.getElementById("importInput").files[0];
+  if(!f) return alert("Choose JSON");
+  try{
+    const data = JSON.parse(await f.text());
+    if(!data.syllabus || !data.plan) throw new Error();
+    appState = data; saveState(); renderAll(); alert("Import successful.");
+  }catch{
+    alert("Invalid backup file.");
+  }
+};
+
+// prefill text area with preloaded md content for reference/editing
+document.getElementById("syllabusText").value = PRELOADED_MD;
+
+renderAll();
+</script>
+</body>
+</html>
