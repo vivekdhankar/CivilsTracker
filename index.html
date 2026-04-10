@@ -14,6 +14,10 @@
       --accent:#6366f1;
       --accent-soft:#e8e9ff;
       --danger:#dc2626;
+      --danger-soft:#fee2e2;
+      --success:#10b981;
+      --success-soft:#d1fae5;
+      --warning:#f59e0b;
       --shadow:0 1px 2px rgba(16,24,40,.04), 0 1px 1px rgba(16,24,40,.02);
       --radius:16px;
     }
@@ -25,6 +29,8 @@
       --border:#1f2937;
       --accent:#818cf8;
       --accent-soft:#1f2545;
+      --danger-soft:rgba(220,38,38,0.15);
+      --success-soft:rgba(16,185,129,0.15);
       --shadow:0 8px 24px rgba(0,0,0,.35);
     }
 
@@ -38,18 +44,19 @@
       text-rendering:optimizeLegibility;
     }
 
-    .app{display:grid;grid-template-columns:320px 1fr;min-height:100vh}
+    .app{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
 
     .sidebar{
       background:var(--card);
       border-right:1px solid var(--border);
       padding:28px 24px;
       position:sticky; top:0; height:100vh;
+      overflow-y:auto;
     }
 
     .brand{
       font-weight:800;
-      font-size:44px;
+      font-size:36px;
       line-height:1.05;
       margin:2px 0 24px;
       letter-spacing:-.02em;
@@ -61,12 +68,11 @@
       text-align:left;
       border:0;
       background:transparent;
-      padding:14px 16px;
-      border-radius:14px;
-      margin-bottom:8px;
+      padding:12px 14px;
+      border-radius:12px;
+      margin-bottom:6px;
       color:var(--text);
-      font-size:36px;
-      line-height:1.15;
+      font-size:20px;
       font-weight:500;
       cursor:pointer;
       transition:.18s ease;
@@ -74,28 +80,32 @@
     .nav-btn:hover{background:#f8fafc}
     .nav-btn.active{
       background:var(--accent-soft);
-      color:#1e293b;
+      color:var(--accent);
       font-weight:600;
     }
     body.dark .nav-btn:hover{background:#0f172a}
-    body.dark .nav-btn.active{color:#e5e7eb}
+    body.dark .nav-btn.active{color:#818cf8}
 
-    .small{font-size:34px;color:var(--muted)}
+    .small{font-size:14px;color:var(--muted)}
 
-    main{padding:34px}
-    .page{display:none}
+    main{padding:34px; max-width: 1400px; width: 100%; margin: 0 auto;}
+    .page{display:none; animation: fadeIn 0.3s ease;}
     .page.active{display:block}
+    @keyframes fadeIn { from{opacity:0; transform:translateY(5px)} to{opacity:1; transform:translateY(0)} }
 
     h2{
-      font-size:58px;
+      font-size:42px;
       line-height:1.08;
       margin:4px 0 24px;
       letter-spacing:-.02em;
       color:var(--text);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     h3{
       margin:0 0 12px;
-      font-size:28px;
+      font-size:22px;
       line-height:1.2;
       letter-spacing:-.01em;
       color:var(--text);
@@ -110,15 +120,20 @@
       box-shadow:var(--shadow);
     }
 
-    .kpi{grid-column:span 4}
+    /* Column Sizing for Dashboard Cards */
+    .kpi { grid-column:span 4; }
+    .kpi.full { grid-column:span 12; }
+    
     .kpi h3{
       margin:0 0 8px;
-      font-size:40px;
+      font-size:16px;
       color:var(--muted);
-      font-weight:700;
+      font-weight:600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
     .kpi .value{
-      font-size:64px;
+      font-size:48px;
       line-height:1;
       font-weight:800;
       margin-bottom:10px;
@@ -128,7 +143,7 @@
 
     .bar{
       width:100%;
-      height:20px;
+      height:16px;
       border-radius:999px;
       background:#e5e7eb;
       overflow:hidden;
@@ -148,19 +163,24 @@
       border:1px solid var(--border);
       background:var(--card);
       color:var(--text);
-      border-radius:12px;
+      border-radius:10px;
       padding:10px 12px;
       font:inherit;
       font-size:15px;
     }
     textarea{width:100%;min-height:140px;resize:vertical}
-    button{cursor:pointer}
+    button{cursor:pointer; font-weight:500; transition:0.2s;}
+    button:active{transform:scale(0.97)}
     .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+    .btn-primary:hover{background:#4f46e5}
+    .btn-success{background:var(--success);border-color:var(--success);color:#fff}
+    .btn-warning{background:var(--warning);border-color:var(--warning);color:#fff}
     .btn-danger{color:var(--danger);border-color:rgba(220,38,38,.35)}
 
+    /* Syllabus Styles */
     .subject{
       border:1px solid var(--border);
-      border-radius:14px;
+      border-radius:12px;
       margin-bottom:10px;
       overflow:hidden;
       background:var(--card);
@@ -175,80 +195,130 @@
     .topic{border-top:1px dashed var(--border)}
     .subtopic{padding-left:32px;color:var(--muted)}
     .topic label,.subtopic label{display:flex;gap:8px;align-items:flex-start}
+    .subject-progress{min-width:140px}
 
-    .plan-item{
-      display:flex;gap:8px;align-items:center;
-      border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:8px;
+    /* Plan & Journal Styles */
+    .plan-item, .journal-item {
+      display:flex;gap:12px;align-items:center;
+      border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;
     }
     .pill{
-      font-size:12px;padding:3px 8px;border-radius:999px;
+      font-size:12px;padding:3px 10px;border-radius:999px; font-weight:600;
       background:var(--accent-soft);color:var(--accent);
     }
     .right{margin-left:auto}
-    .subject-progress{min-width:160px}
+    .tabs{display:flex; gap:8px; margin-bottom:16px;}
+    .tab{padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:500; border:1px solid var(--border); background:var(--card);}
+    .tab.active{background:var(--accent); color:white; border-color:var(--accent);}
 
-    @media (max-width:1400px){
-      .app{grid-template-columns:280px 1fr}
-      .brand{font-size:38px}
-      .nav-btn{font-size:30px}
-      h2{font-size:48px}
-      .kpi h3{font-size:30px}
-      .kpi .value{font-size:54px}
-      .small{font-size:24px}
-      .sidebar label{font-size:30px}
+    .journal-layout { display:grid; grid-template-columns: 300px 1fr; gap:18px; }
+    .journal-list { max-height:600px; overflow-y:auto; padding-right:8px; }
+    .journal-item { cursor:pointer; transition:0.2s; align-items:flex-start; flex-direction:column; gap:4px; }
+    .journal-item:hover { border-color:var(--accent); }
+    .journal-item.active { background:var(--accent-soft); border-color:var(--accent); }
+
+    /* Calendar Styles */
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-top: 16px;
     }
-    @media (max-width:900px){
+    .cal-header { text-align:center; font-weight:700; color:var(--muted); padding:10px; }
+    .cal-day {
+      aspect-ratio: 1; border-radius: 12px; border: 1px solid var(--border);
+      display:flex; flex-direction:column; padding:8px; font-weight:500;
+      background: var(--card); transition:0.2s;
+    }
+    .cal-day:hover { border-color:var(--accent); }
+    .cal-day.empty { background: transparent; border: none; }
+    .cal-day.today { background: var(--accent); color: white; border-color: var(--accent); }
+    .cal-day.success { background: var(--success-soft); border-color: var(--success); }
+    .cal-day.fail { background: var(--danger-soft); border-color: var(--danger); }
+    
+    .cal-day .dots { display:flex; gap:4px; margin-top:auto; }
+    .dot { width:6px; height:6px; border-radius:50%; background:var(--accent-soft); }
+    .today .dot { background: white; }
+    
+    .goal-btn { background:none; border:none; padding:0 2px; font-size:16px; cursor:pointer; transition:0.15s; }
+    .goal-btn:hover { transform:scale(1.2); }
+
+    /* Responsive Design Adjustments */
+    @media (max-width:1100px){
+      .kpi { grid-column:span 6; }
+      .kpi.full { grid-column:span 12; }
+      .journal-layout { grid-template-columns: 1fr; }
+    }
+    @media (max-width:800px){
       .app{grid-template-columns:1fr}
-      .sidebar{position:static;height:auto}
-      .kpi{grid-column:span 12}
-      .brand{font-size:34px}
-      .nav-btn{font-size:24px}
-      h2{font-size:40px}
-      .kpi h3{font-size:24px}
-      .kpi .value{font-size:44px}
-      .small{font-size:18px}
-      .sidebar label{font-size:24px}
+      .sidebar{position:static;height:auto; padding:16px; border-right:none; border-bottom:1px solid var(--border);}
+      h2{font-size:32px; flex-direction:column; align-items:flex-start; gap:8px;}
+      .kpi { grid-column:span 12; }
+      .calendar-grid { gap:4px; }
+      .cal-day { padding:4px; font-size:12px; }
     }
   </style>
 </head>
 <body>
 <div class="app">
   <aside class="sidebar">
-    <div class="brand">UPSC Tracker</div>
+    <div class="brand">Civils Tracker</div>
     <button class="nav-btn active" data-page="dashboard">Dashboard</button>
     <button class="nav-btn" data-page="syllabus">Syllabus Tracker</button>
     <button class="nav-btn" data-page="plan">Study Plan</button>
+    <button class="nav-btn" data-page="analytics">Analytics</button>
+    <button class="nav-btn" data-page="journal">Journal</button>
+    <button class="nav-btn" data-page="calendar">Calendar</button>
     <button class="nav-btn" data-page="settings">Settings</button>
+    
     <hr style="border:none;border-top:1px solid var(--border);margin:22px 0">
-    <label style="display:flex;align-items:center;gap:12px;font-size:40px;">
-      <input type="checkbox" id="darkToggle" style="width:28px;height:28px;border-radius:6px;" />
-      <span>Dark mode</span>
+    <label style="display:flex;align-items:center;gap:12px;font-size:18px; cursor:pointer;">
+      <input type="checkbox" id="darkToggle" style="width:20px;height:20px;border-radius:6px;" />
+      <span>Dark Mode</span>
     </label>
-    <p class="small">Data auto-saved in localStorage</p>
+    <p class="small" style="margin-top:16px;">Data auto-saved in localStorage.</p>
   </aside>
 
   <main>
     <section id="dashboard" class="page active">
-      <h2>Dashboard</h2>
+      <h2>Dashboard <span id="clockDisplay" style="font-size:24px; color:var(--accent); font-weight:600; font-variant-numeric: tabular-nums;">00:00:00</span></h2>
       <div class="grid">
+        
+        <div class="card kpi full" style="border-color:var(--accent); border-width:2px;">
+          <h3 style="color:var(--accent);">Study Timer</h3>
+          <div class="value" id="timerDisplay" style="font-variant-numeric: tabular-nums; font-size: 64px;">00:00:00</div>
+          <div class="toolbar" style="margin-top:10px;">
+            <select id="timerSubject" style="flex:1; max-width: 400px;">
+              <option value="">-- Select Subject --</option>
+            </select>
+            <button class="btn-success" id="btnStartTimer" style="font-size: 16px; padding: 10px 24px;">Start</button>
+            <button class="btn-warning" id="btnPauseTimer" style="display:none; font-size: 16px; padding: 10px 24px;">Pause</button>
+            <button class="btn-danger" id="btnStopTimer" style="display:none; font-size: 16px; padding: 10px 24px;">Stop & Log Time</button>
+          </div>
+        </div>
+
         <div class="card kpi">
-          <h3>Overall Completion</h3>
+          <h3>Syllabus Completion</h3>
           <div class="value" id="overallPct">0%</div>
           <div class="bar"><span id="overallBar"></span></div>
         </div>
+
         <div class="card kpi">
           <h3>Completed Items</h3>
           <div class="value"><span id="doneCount">0</span>/<span id="totalCount">0</span></div>
           <div class="small">Topics + subtopics checked</div>
         </div>
+
         <div class="card kpi">
-          <h3>Study Plan Tasks</h3>
+          <h3>Study Plan (Today)</h3>
           <div class="value"><span id="planDone">0</span>/<span id="planTotal">0</span></div>
-          <div class="small">Daily/weekly goals completed</div>
+          <div class="small">Daily goals completed</div>
         </div>
+
       </div>
+      
       <div class="card" style="margin-top:18px">
-        <h3 style="margin-top:0">Subject-wise Progress</h3>
+        <h3 style="margin-top:0">Subject Progress</h3>
         <div id="subjectProgressList"></div>
       </div>
     </section>
@@ -257,28 +327,104 @@
       <h2>Syllabus Tracker</h2>
       <div class="card">
         <div class="toolbar">
-          <input type="file" id="fileInput" accept=".md,text/markdown"/>
-          <button id="parseFileBtn">Load .md File</button>
+          <input type="file" id="fileInput" accept=".md,.txt,text/markdown"/>
+          <button id="parseFileBtn">Load Markdown</button>
           <button id="parseTextBtn">Parse Pasted Text</button>
-          <input type="text" id="searchInput" placeholder="Search subject/topic/subtopic..." />
-          <button id="expandAll">Expand All</button>
-          <button id="collapseAll">Collapse All</button>
+          <input type="text" id="searchInput" placeholder="Search syllabus..." style="flex:1; min-width:200px;" />
+          <button id="expandAll">Expand</button>
+          <button id="collapseAll">Collapse</button>
         </div>
-        <textarea id="syllabusText" placeholder="Paste markdown syllabus text here..."></textarea>
-        <p class="small">Supports markdown headings (#, ##, ###) and bullet points (-).</p>
+        <textarea id="syllabusText" placeholder="Paste markdown text here (# Subject, ## Topic, - Subtopic)"></textarea>
       </div>
       <div style="margin-top:12px" id="syllabusContainer"></div>
     </section>
 
     <section id="plan" class="page">
-      <h2>Study Plan</h2>
+      <h2>Study Planner</h2>
       <div class="card">
         <div class="toolbar">
-          <input id="taskText" placeholder="Add task (e.g., Revise Polity Ch 1-3)" />
-          <select id="taskType"><option value="Daily">Daily</option><option value="Weekly">Weekly</option></select>
+          <input id="taskText" placeholder="Add a new task..." style="flex:1;" />
+          <select id="taskType">
+            <option value="Daily">Daily</option>
+            <option value="Weekly">Weekly</option>
+            <option value="Monthly">Monthly</option>
+          </select>
           <button class="btn-primary" id="addTaskBtn">Add Task</button>
         </div>
+        
+        <div class="tabs" id="planTabs">
+          <div class="tab active" data-filter="All">All</div>
+          <div class="tab" data-filter="Daily">Daily</div>
+          <div class="tab" data-filter="Weekly">Weekly</div>
+          <div class="tab" data-filter="Monthly">Monthly</div>
+        </div>
+
         <div id="planList"></div>
+      </div>
+    </section>
+
+    <section id="analytics" class="page">
+      <h2>Study Analytics</h2>
+      <div class="grid">
+        <div class="card kpi full">
+          <h3>Total Time Studied</h3>
+          <div class="value" id="totalTimeDisplay">0h 0m</div>
+          <div class="small">Based on saved timer sessions.</div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:18px">
+        <h3>Time Spent Per Subject</h3>
+        <div id="analyticsChartList">
+          <p class="small">No data yet. Complete a session using the Study Timer on the Dashboard.</p>
+        </div>
+      </div>
+      <div class="card" style="margin-top:18px">
+        <h3>Recent Sessions</h3>
+        <div id="recentLogsList" style="max-height: 250px; overflow-y:auto;"></div>
+      </div>
+    </section>
+
+    <section id="journal" class="page">
+      <h2>Journal & Notes</h2>
+      <div class="journal-layout">
+        <div class="card journal-list">
+          <button class="btn-primary" id="newNoteBtn" style="width:100%; margin-bottom:12px;">+ New Note</button>
+          <div id="journalEntriesList"></div>
+        </div>
+        <div class="card">
+          <input type="text" id="journalTitle" placeholder="Note Title" style="width:100%; font-size:20px; font-weight:bold; margin-bottom:12px;" disabled />
+          <textarea id="journalContent" placeholder="Write your notes here..." style="min-height:400px;" disabled></textarea>
+          <div class="toolbar" style="margin-top:12px; justify-content:flex-end;">
+            <button class="btn-danger" id="deleteNoteBtn" disabled>Delete</button>
+            <button class="btn-primary" id="saveNoteBtn" disabled>Save Note</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="calendar" class="page">
+      <h2>
+        Calendar 
+        <button id="resetCalBtn" class="small" style="background:none; border:none; color:var(--accent); cursor:pointer;">(Go to Today)</button>
+      </h2>
+      
+      <div style="margin-bottom: 16px;">
+         <div class="pill" style="display:inline-block; padding: 6px 14px; background:var(--danger-soft); color:var(--danger); font-size: 15px; border: 1px solid var(--danger);">
+            Total Missed Goals (Crosses): <span id="failedGoalsCount" style="font-weight:800; font-size: 18px;">0</span>
+         </div>
+      </div>
+
+      <div class="card">
+        <div class="toolbar" style="justify-content:center;">
+          <button id="prevMonthBtn">&larr; Prev</button>
+          <h3 id="currentMonthYear" style="margin:0 16px; min-width:150px; text-align:center;">Month Year</h3>
+          <button id="nextMonthBtn">Next &rarr;</button>
+        </div>
+        <div class="calendar-grid">
+          <div class="cal-header">Sun</div><div class="cal-header">Mon</div>
+          <div class="cal-header">Tue</div><div class="cal-header">Wed</div>
+          <div class="cal-header">Thu</div><div class="cal-header">Fri</div><div class="cal-header">Sat</div>
+          </div>
       </div>
     </section>
 
@@ -289,101 +435,379 @@
         <button class="btn-danger" id="resetPlanBtn">Reset Study Plan</button>
         <button class="btn-danger" id="resetAllBtn">Reset All App Data</button>
         <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
-        <button id="exportBtn">Export JSON</button>
+        <button id="exportBtn">Export Data (JSON)</button>
         <input type="file" id="importInput" accept=".json,application/json" />
-        <button id="importBtn">Import JSON</button>
+        <button id="importBtn">Import Data</button>
       </div>
     </section>
   </main>
 </div>
 
 <script>
-window.onerror = function(msg, url, line) {
-  console.error("Crash: " + msg + " at line " + line);
-};
+window.onerror = function(msg, url, line) { console.error("Crash: " + msg + " at line " + line); };
 
 let isAppInitialized = false;
+
+// THE RAW PRELOADED SYLLABUS
+const PRELOADED_SYLLABUS_MD = `
+# Ancient History
+Pre-Historic India
+Indus Valley Civilization
+Vedic Period
+Rise of Mahajanpadas
+Mauryan Empire
+Post-Mauryan Empire
+Gupta Empire
+Harsha's Empire
+Regional Power
+Cultural Development
+
+# Medieval History
+Early Medieval India (8th to 12th Centuries)
+Delhi Sultanate (1206-1526)
+Vijayanagar and Bahmani Kingdom
+Central Asian Politics & Babur's Advance into India
+Struggle for Empire in North India
+Establishment of the North India Empire
+Consolidation and Expansion under Akbar (1556-1605)
+State and Government under Akbar
+The Deccan and the Mughal (up to 1657)
+Mughal Foreign Policy
+Indian in the First Half of the 17th Century
+Aurangzeb: Religious Policies and North India
+Climax and Crisis of the Mughal Empire
+Northen India in the First half of 18th Century
+The Maratha Bid for Supremacy
+Rise of Regional Powers in the 18th Century
+Cultural Developments in Medieval India
+
+# Modern History
+India on the Eve of British conquest (1700-1757)
+British Conquest and Consolidation (1757-1857)
+The Great Revolt 1857
+Socio-Religious Reform Movement (18th-19th centuries)
+Early Nationalist Movement (1858-1905)
+Indian National Movement (1905-1918)
+Gandhian Era and Mass Movement (1917-1935)
+Towards Freedom (1935-1947)
+Section Movements and Alternative Strands
+Ideas and Ideologies in the indian National Movement
+Cultural Awakening and Education
+Constitutional Development
+Princely States & Freedom Struggle
+Key Personalities and Their Contributions
+Important Organizations, Events and Documents
+
+# Post Independence India
+Reorganization of States
+Linguistics Regionalism in India
+Tribal Issues and Policy Consolidation
+Issues of Women and Evolution of Women's Movement
+Problem of Caste and Social Consolidation
+Communalism and Social consolidation
+Issues of Linguistic Minorites
+Overview of Economic Development Since Independence
+Agriculture
+Industry
+New Economic Policy
+Post Independence Policy of Science and Technology
+Political development
+Social and Cultural Chages
+Education and Health
+
+# World History
+Dawn of the Modern Era (15th-18th Centuries)
+Age of Revolution (Late 18th - Early 19th Centuries)
+Nationalism and national Building (19th Centuries)
+Imperialism and Global Expansion (19th-Early 20th Centuries)
+The United States: From colony to superpower
+World War I and its Aftermath
+Russian Revolutions and the Soviet Era
+Interwar Period (1919-1939)
+World War II
+Decolonization and Independence Movement
+The Cold War Era
+The Post - Cold war World
+Political and Economic Systems
+Contemporary Global Issues
+Cultural and Social Movement
+
+# Art and Culture
+Prehistoric and Ancient Indian Art
+Classical and Medieval Indian Architecture
+Indo-Islamic and Colonial Architecture
+Visual Arts Through the Ages
+Ceramic and Metallurgical Traditions
+Performing Arts if India
+Martial Arts and Physical Traditions
+Modern Performative and Visual Media
+Religious and Philosophical Traditions
+Language and Literature
+Scientific and Technological Heritage
+Culinary and Textile Tradition
+Festivals, Fairs and Social Practice
+Cultural Institutions and Heritage Management
+India Diaspora and Global Cultural Impact
+Contemporary Issues in Indian Culture
+
+# Physical Geography
+Origin and Evolution of Earth
+Earth's Motion and Coordinate Systems
+Interior of the Earth and Seismology
+Geology and Rock Cycle
+Geomorphic Processes and Landforms
+Atmosphere and Climate
+Hydrosphere and Oceanography
+Forests
+
+# Physical Geography of India
+Physiography of India
+Drainage System
+Climate
+Soils in India
+Natural Vegetation and Wildlife
+Mineral and Energy Resources
+Marine Geography of India
+Agricultural Geography
+
+# Human Geography
+Population Dynamics and Demography
+Migration and Mobility
+Urbanization and Urban Geography
+Settlement Geography
+Population Geography of India
+Human Development and Social Geography
+
+# Indian Society
+Salient features of Indian Society
+Unity in Diversity of India
+Women and Society
+Poverty and Development Issues
+Globalization and Indian Society
+Social Empowerment and Social Justice
+Communalism and Secularism
+Regionalism and National Integration
+Urbanization and Its Impact
+Caste System in Contemporary India
+Social Movements in Modern India
+Science, technology and Society
+Education and Social Change
+Health and Society
+Population and Demographic Dividend
+
+# Social Justice
+Welfare Scheme for Vulnerable Sections
+Skill Development and Entrepreneurship
+Social security and financial inclusion
+Health and Education
+Poverty and hunger
+Scheduled and Tribal Areas
+Rural and Urban Development
+Social Issues and Justice
+Labor Reforms and Worker's Rights
+Social Movements and Civil Society
+
+# Indian Polity
+Constitutional Framework
+System of Government
+Central Government
+State Government
+Judiciary
+Local Government
+Union Territories and Special Areas
+Constitutional Bodies
+Non-constitutional Bodies
+Other constitutional Dimensions
+Political Dynamics
+
+# Governance
+Governance and Good Governance
+Development Process and Stakeholders
+Accountability Mechanism
+Decentralization and Local Governance
+Civil Services in Democracy
+Constitutional Bodies and Statutory Institutions
+Electoral System and Reforms
+Political Parties and Pressure Groups
+Vulnerable Sections and Inclusive Governance
+Contemporary Issues in Governance
+Governance Innovations and Best Practices
+
+# International Relations
+India's Foreign Policy
+Evolution of Neighborhood Policy
+Indian Diaspora: Role, Safety Issues and Welfare Schemes
+India - Russian Relations
+India - China Relations
+India - North America Relations
+India - CIS Countries of Central Asia Relations
+India - East Asia Relations
+India - West Asia Relations
+India - Southeast Asia Relations
+India - Africa Relations
+India - EU Relations
+India - Latin America Relations
+Multilateral Forums and Organizations
+
+# Indian Economy
+Indian Economy: Historical Perspective
+Planning and Development
+National income and Economic Indicators
+Sustainable and Inclusive Growth
+Agriculture and Rural Economy
+Industrial Sector
+Service Sector
+Employment and Skill Development
+Resource Mobilization and Investment
+Government Budgeting
+Fiscal Policy
+Monetary policy
+Financial System
+Banking Sector
+External Sector
+International Economic Organizations
+Current Economic Issues and Government Initiatives
+Environment Economics and Sustainability
+Poverty and Inequality
+Federalism and Economic Governance
+
+# Infrastructure
+Industrial Policy and Development in India
+Transport Infrastructure
+Energy Infrastructure
+Telecommunications and Digital Infrastructure
+Urban and Rural Infrastructure
+Infrastructure Financing and Implementation
+Cross-cutting Themes and Emerging Trends
+Infrastructure Governance and Policy
+
+# Agriculture
+Agriculture and The Indian Economy
+Agriculture Policy and Government Interventions
+Sustainable Agriculture and Climate change
+Agriculture Finance and Risk Management
+Agriculture Marketing and Food Processing
+Technology in Agriculture
+Allied Sector
+Agricultural Research, Education and Extension
+Challenges in Indian Agriculture
+Emerging Trends and future
+Agriculture and International Trade
+
+# Ecology and Environment
+Biotechnology and Genetic Engineering
+Space Technology and Exploration
+Defense and Strategic Technologies
+Nuclear Technology and Energy
+Information Technology and Artificial Intelligence
+Renewable Energy and Sustainability
+Nanotechnology and Advanced Materials
+Robotic and Automation
+Health and Medical Technologies
+Environmental Technologies and Climate change Mitigation
+Emerging and Disruptive Technologies
+Science and Technology Policy and Ethics
+
+# Security
+Internal Security Challenges
+Naxalist and Left-Wing Extremism
+Terrorism in Hinterland & Border Areas
+J&K Separatism
+North East Insurgency
+Communal Violence 
+External Influences on Internal Security
+Institutional Framework to Tackle Challenges of Internal Security
+Legal Framework for Internal Security
+Cyber Security and Information Warfare
+Economic Security
+Border Management and Security
+Organized Crime and Terrorism
+Security Force and Agencies
+International Cooperation in Security
+Maritime Security
+Critical Infrastructure Protection
+Intelligence Reforms
+
+# Disaster Management
+Introduction to Disaster Management
+Natural Disasters: Causes, Impact, and Management Strategies
+Human - Induced Disaster Prevention and Mitigation
+Legal and Institutional Framework for Disaster Management in India
+Disaster Management Plans and International Cooperation
+Early Warning Systems and Technology in Disaster Management
+Community - Based Disaster Risk Reduction and Preparedness
+Financial Aspects and Risk transfer mechanism
+Case Studies and Lessons Learned
+Emerging Challenges in Disaster management
+Post-Disaster Recovery and Reconstruction
+
+# Ethics, Integrity & Aptitude
+Human Values
+Role Family, Society and Educational Institutions in Inculcating Values
+Attitude
+Emotional Intelligence
+Contribution of Moral thinkers and Philosophers
+Public/Civil Service Values and Ethics in Public Administration
+Probity in Governance
+Environmental Ethics
+Professional Ethics
+Applied Ethics (Case Studies)
+Ethical Decision - Making Framework
+Ethics in the Digital Age
+Global Ethics and International Relations
+Ethics and Law
+
+# Science and Technology
+Recent Advancements in Science and Technology
+Everyday Applications of Science
+Information Technology and Computers
+AI, ML and Cloud Computing
+Internet of Things (IoT)
+Quantum Computing
+Cybersecurity
+Semiconductors
+Space Technology
+Biotechnology and Health
+Defense Technology
+Nuclear Technology
+Nanotechnology and Materials Science
+Renewable Energy and Sustainability
+Intellectual Property Rights (IPR)
+`;
 
 function initApp() {
   if (isAppInitialized) return;
   isAppInitialized = true;
 
-  const STORAGE_KEY = "upscTrackerState";
+  const STORAGE_KEY = "upscTrackerStateFull";
   
+  // Helpers
   function uid(){ return Math.random().toString(36).slice(2,9); }
   function byId(id){ return document.getElementById(id); }
   function on(id, event, handler){
     const el = byId(id);
     if(el) { el.addEventListener(event, handler); }
   }
-
-  function defaultSyllabus(){ return []; }
-  function defaultPlan(){
-    return [
-      {id:uid(), text:"Read newspaper + make concise notes", type:"Daily", done:false},
-      {id:uid(), text:"Revise one GS subject block", type:"Daily", done:false}
-    ];
+  function formatTime(totalSeconds) {
+    const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+    const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
+    const s = (totalSeconds % 60).toString().padStart(2, '0');
+    return `${h}:${m}:${s}`;
   }
 
-  // Crash-proof Local Storage Loader
-  function loadState(){
-    let state = null;
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if(raw) state = JSON.parse(raw);
-    } catch(e) {
-      console.warn("Could not read local storage (security block?). Working in temporary memory mode.", e);
-    }
-    
-    return { 
-      syllabus: (state && Array.isArray(state.syllabus)) ? state.syllabus : defaultSyllabus(), 
-      plan: (state && Array.isArray(state.plan)) ? state.plan : defaultPlan(), 
-      darkMode: state ? !!state.darkMode : false 
-    };
-  }
-
-  let appState = loadState();
-
-  // Crash-proof Local Storage Saver
-  function saveState(){ 
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); 
-    } catch(e) {
-      console.warn("Could not save to local storage (security block?).", e);
-    }
-  }
-  
-  function resetAll(){ 
-    appState = { syllabus: defaultSyllabus(), plan: defaultPlan(), darkMode:false }; 
-    saveState(); 
-    renderAll(); 
-  }
-
-  // Bind Navigation Buttons
-  const navBtns = document.querySelectorAll(".nav-btn");
-  navBtns.forEach(function(btn) {
-    btn.addEventListener("click", function(){
-      navBtns.forEach(function(b){ b.classList.remove("active"); });
-      btn.classList.add("active");
-      const page = btn.getAttribute("data-page");
-      document.querySelectorAll(".page").forEach(function(p){ p.classList.remove("active"); });
-      const section = byId(page);
-      if(section) section.classList.add("active");
-    });
-  });
-
+  // --- Parser Function (Moved up so loadState can use it) ---
   function parseSyllabusText(text){
-    const lines = text.split(/\r?\n/).map(function(l){ return l.trim(); }).filter(Boolean);
+    const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
     const subjects = [];
     let currentSubject = null, currentTopic = null;
 
     lines.forEach(function(line) {
       if(line.startsWith("# ")){
-        currentSubject = {id:uid(), name:line.replace(/^#\s*/,""), expanded:true, topics:[]};
+        currentSubject = {id:uid(), name:line.replace(/^#\s*/,""), expanded:false, topics:[]}; // Default collapsed for large lists
         subjects.push(currentSubject); currentTopic = null;
       }else if(line.startsWith("## ")){
         if(!currentSubject){
-          currentSubject = {id:uid(), name:"General", expanded:true, topics:[]};
+          currentSubject = {id:uid(), name:"General", expanded:false, topics:[]};
           subjects.push(currentSubject);
         }
         currentTopic = {id:uid(), name:line.replace(/^##\s*/,""), done:false, subtopics:[]};
@@ -391,7 +815,7 @@ function initApp() {
       }else if(line.startsWith("### ")){
         if(!currentTopic){
           if(!currentSubject){
-            currentSubject = {id:uid(), name:"General", expanded:true, topics:[]};
+            currentSubject = {id:uid(), name:"General", expanded:false, topics:[]};
             subjects.push(currentSubject);
           }
           currentTopic = {id:uid(), name:"Misc Topic", done:false, subtopics:[]};
@@ -402,7 +826,7 @@ function initApp() {
         const item = line.replace(/^[-*]\s+/,"");
         if(!currentTopic){
           if(!currentSubject){
-            currentSubject = {id:uid(), name:"General", expanded:true, topics:[]};
+            currentSubject = {id:uid(), name:"General", expanded:false, topics:[]};
             subjects.push(currentSubject);
           }
           currentTopic = {id:uid(), name:"Misc Topic", done:false, subtopics:[]};
@@ -411,7 +835,7 @@ function initApp() {
         currentTopic.subtopics.push({id:uid(), name:item, done:false});
       }else{
         if(!currentSubject){
-          currentSubject = {id:uid(), name:line, expanded:true, topics:[]};
+          currentSubject = {id:uid(), name:line, expanded:false, topics:[]};
           subjects.push(currentSubject);
         }else{
           currentTopic = {id:uid(), name:line, done:false, subtopics:[]};
@@ -422,50 +846,162 @@ function initApp() {
     return subjects;
   }
 
-  function toggleTopic(topicId, val){
-    appState.syllabus.forEach(function(s){
-      s.topics.forEach(function(t){
-        if(t.id===topicId){
-          t.done = val;
-          t.subtopics.forEach(function(st){ st.done = val; });
-        }
+  // Defaults
+  function defaultSyllabus(){ 
+    return parseSyllabusText(PRELOADED_SYLLABUS_MD); 
+  }
+  
+  function defaultPlan(){
+    return [
+      {id:uid(), text:"Read newspaper (The Hindu/Indian Express)", type:"Daily", done:false},
+      {id:uid(), text:"Revise current affairs weekly compilation", type:"Weekly", done:false}
+    ];
+  }
+
+  // State Management
+  function loadState(){
+    let state = null;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw) state = JSON.parse(raw);
+    } catch(e) { console.warn("Local storage block/error.", e); }
+    
+    // Safely load syllabus, inject default preloaded one if array is empty
+    let loadedSyllabus = (state && Array.isArray(state.syllabus)) ? state.syllabus : defaultSyllabus();
+    if(loadedSyllabus.length === 0) {
+      loadedSyllabus = defaultSyllabus();
+    }
+
+    return { 
+      syllabus: loadedSyllabus, 
+      plan: (state && Array.isArray(state.plan)) ? state.plan : defaultPlan(), 
+      logs: (state && Array.isArray(state.logs)) ? state.logs : [], // Timer logs
+      journal: (state && Array.isArray(state.journal)) ? state.journal : [], // Notes
+      goalStatus: (state && state.goalStatus) ? state.goalStatus : {}, // Calendar Goal Status Dictionary
+      darkMode: state ? !!state.darkMode : false 
+    };
+  }
+
+  let appState = loadState();
+
+  function saveState(){ 
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); } 
+    catch(e) { console.warn("Save blocked.", e); }
+  }
+  
+  function resetAll(){ 
+    appState = { syllabus: defaultSyllabus(), plan: defaultPlan(), logs: [], journal: [], goalStatus: {}, darkMode:false }; 
+    saveState(); 
+    renderAll(); 
+  }
+
+  // --- Clock ---
+  setInterval(function() {
+    const now = new Date();
+    const clockEl = byId("clockDisplay");
+    if(clockEl) clockEl.textContent = now.toLocaleTimeString();
+  }, 1000);
+
+  // --- Navigation ---
+  const navBtns = document.querySelectorAll(".nav-btn");
+  navBtns.forEach(function(btn) {
+    btn.addEventListener("click", function(){
+      navBtns.forEach(function(b){ b.classList.remove("active"); });
+      btn.classList.add("active");
+      const page = btn.getAttribute("data-page");
+      document.querySelectorAll(".page").forEach(function(p){ p.classList.remove("active"); });
+      const section = byId(page);
+      if(section) section.classList.add("active");
+      
+      // Special logic per page render if needed
+      if(page === 'analytics') renderAnalytics();
+      if(page === 'calendar') renderCalendar();
+    });
+  });
+
+  // --- Study Timer Logic ---
+  let timerInterval = null;
+  let timerSeconds = 0;
+  
+  function updateTimerUI() {
+    byId("timerDisplay").textContent = formatTime(timerSeconds);
+  }
+
+  on("btnStartTimer", "click", function(){
+    const subjEl = byId("timerSubject");
+    if(subjEl && subjEl.value === "") { alert("Please select a subject first!"); return; }
+    
+    byId("btnStartTimer").style.display = "none";
+    byId("btnPauseTimer").style.display = "inline-block";
+    byId("btnStopTimer").style.display = "inline-block";
+    if(subjEl) subjEl.disabled = true;
+
+    if(!timerInterval) {
+      timerInterval = setInterval(function(){
+        timerSeconds++;
+        updateTimerUI();
+      }, 1000);
+    }
+  });
+
+  on("btnPauseTimer", "click", function(){
+    clearInterval(timerInterval);
+    timerInterval = null;
+    byId("btnStartTimer").textContent = "Resume";
+    byId("btnStartTimer").style.display = "inline-block";
+    byId("btnPauseTimer").style.display = "none";
+  });
+
+  on("btnStopTimer", "click", function(){
+    clearInterval(timerInterval);
+    timerInterval = null;
+    
+    const subjEl = byId("timerSubject");
+    const subjName = subjEl.options[subjEl.selectedIndex].text;
+    
+    if(timerSeconds > 0) {
+      appState.logs.push({
+        id: uid(),
+        subject: subjName,
+        seconds: timerSeconds,
+        date: new Date().toISOString()
       });
-    });
-  }
+      saveState();
+      alert(`Session saved: ${formatTime(timerSeconds)} for ${subjName}`);
+    }
+    
+    // Reset Timer
+    timerSeconds = 0;
+    updateTimerUI();
+    
+    byId("btnStartTimer").textContent = "Start";
+    byId("btnStartTimer").style.display = "inline-block";
+    byId("btnPauseTimer").style.display = "none";
+    byId("btnStopTimer").style.display = "none";
+    if(subjEl) subjEl.disabled = false;
+    
+    renderDashboard();
+    renderAnalytics();
+  });
 
-  function toggleSubtopic(topicId, subId, val){
+  // Populate Timer Dropdown
+  function populateTimerSubjects() {
+    const sel = byId("timerSubject");
+    if(!sel) return;
+    const currentVal = sel.value;
+    sel.innerHTML = '<option value="">-- Select Subject --</option>';
     appState.syllabus.forEach(function(s){
-      s.topics.forEach(function(t){
-        if(t.id===topicId){
-          const sub = t.subtopics.find(function(x){ return x.id===subId; });
-          if(sub) sub.done = val;
-          t.done = t.subtopics.length ? t.subtopics.every(function(x){ return x.done; }) : t.done;
-        }
-      });
+      const opt = document.createElement("option");
+      opt.value = s.id;
+      opt.textContent = s.name;
+      sel.appendChild(opt);
     });
+    sel.value = currentVal; 
   }
 
-  function getSubjectCompletion(subject){
-    let total=0, done=0;
-    subject.topics.forEach(function(t){
-      total++; if(t.done) done++;
-      t.subtopics.forEach(function(st){ total++; if(st.done) done++; });
-    });
-    return total ? Math.round(done*100/total) : 0;
-  }
-
-  function getOverallMetrics(){
-    let total=0, done=0;
-    appState.syllabus.forEach(function(s){
-      s.topics.forEach(function(t){
-        total++; if(t.done) done++;
-        t.subtopics.forEach(function(st){ total++; if(st.done) done++; });
-      });
-    });
-    return { total:total, done:done, percent: total ? Math.round(done*100/total) : 0 };
-  }
-
+  // --- Syllabus UI Rendering ---
   function renderSyllabus(){
+    populateTimerSubjects();
     const searchEl = byId("searchInput");
     const q = searchEl ? searchEl.value.trim().toLowerCase() : "";
     const container = byId("syllabusContainer");
@@ -473,7 +1009,7 @@ function initApp() {
     container.innerHTML = "";
 
     if(appState.syllabus.length === 0){
-      container.innerHTML = `<div class="card"><p class="small">No syllabus loaded yet. Upload a .md file or paste text and click "Parse Pasted Text".</p></div>`;
+      container.innerHTML = `<div class="card"><p class="small">No syllabus loaded. Upload .md file or paste text.</p></div>`;
       return;
     }
 
@@ -489,17 +1025,16 @@ function initApp() {
 
       const right = document.createElement("div");
       right.className = "subject-progress";
-      const pct = getSubjectCompletion(subject);
+      let total=0, done=0;
+      subject.topics.forEach(function(t){
+        total++; if(t.done) done++;
+        t.subtopics.forEach(function(st){ total++; if(st.done) done++; });
+      });
+      const pct = total ? Math.round(done*100/total) : 0;
       right.innerHTML = `<div class="bar"><span style="width:${pct}%"></span></div><div class="small">${pct}%</div>`;
 
-      head.appendChild(left);
-      head.appendChild(right);
-      
-      head.addEventListener("click", function(){ 
-        subject.expanded = !subject.expanded; 
-        saveState(); 
-        renderSyllabus(); 
-      });
+      head.appendChild(left); head.appendChild(right);
+      head.addEventListener("click", function(){ subject.expanded = !subject.expanded; saveState(); renderSyllabus(); });
       subjectEl.appendChild(head);
 
       const body = document.createElement("div");
@@ -513,14 +1048,14 @@ function initApp() {
 
         const topicDiv = document.createElement("div");
         topicDiv.className = "topic";
-        topicDiv.innerHTML = `<label><input type="checkbox" ${topic.done ? "checked":""} data-type="topic" data-id="${topic.id}"><span>${topic.name}</span></label>`;
+        topicDiv.innerHTML = `<label><input type="checkbox" ${topic.done?"checked":""} data-type="topic" data-id="${topic.id}"><span>${topic.name}</span></label>`;
         body.appendChild(topicDiv);
 
         topic.subtopics.forEach(function(sub){
           if(q && !(subjectMatches || topicMatches || sub.name.toLowerCase().includes(q))) return;
           const subDiv = document.createElement("div");
           subDiv.className = "subtopic";
-          subDiv.innerHTML = `<label><input type="checkbox" ${sub.done ? "checked":""} data-type="sub" data-id="${sub.id}" data-topic="${topic.id}"><span>${sub.name}</span></label>`;
+          subDiv.innerHTML = `<label><input type="checkbox" ${sub.done?"checked":""} data-type="sub" data-id="${sub.id}" data-topic="${topic.id}"><span>${sub.name}</span></label>`;
           body.appendChild(subDiv);
         });
       });
@@ -533,30 +1068,52 @@ function initApp() {
       cb.addEventListener("change", function(e){
         const type = e.target.getAttribute("data-type");
         const id = e.target.getAttribute("data-id");
-        if(type==="topic") {
-            toggleTopic(id, e.target.checked);
-        } else {
-            toggleSubtopic(e.target.getAttribute("data-topic"), id, e.target.checked);
-        }
-        saveState(); 
-        renderAll();
+        appState.syllabus.forEach(function(s){
+          s.topics.forEach(function(t){
+            if(type==="topic" && t.id===id){
+              t.done = e.target.checked;
+              t.subtopics.forEach(st=>st.done=e.target.checked);
+            } else if (type==="sub") {
+              const sub = t.subtopics.find(x=>x.id===id);
+              if(sub) sub.done = e.target.checked;
+              if(t.id===e.target.getAttribute("data-topic")) {
+                t.done = t.subtopics.length ? t.subtopics.every(x=>x.done) : t.done;
+              }
+            }
+          });
+        });
+        saveState(); renderAll();
       });
     });
   }
+
+  // --- Plan Logic ---
+  let planFilter = "All";
+  
+  document.querySelectorAll("#planTabs .tab").forEach(tab => {
+    tab.addEventListener("click", function(e){
+      document.querySelectorAll("#planTabs .tab").forEach(t=>t.classList.remove("active"));
+      e.target.classList.add("active");
+      planFilter = e.target.getAttribute("data-filter");
+      renderPlan();
+    });
+  });
 
   function renderPlan(){
     const list = byId("planList");
     if(!list) return;
     list.innerHTML = "";
     
-    appState.plan.forEach(function(item){
+    const filtered = appState.plan.filter(item => planFilter === "All" || item.type === planFilter);
+    
+    filtered.forEach(function(item){
       const row = document.createElement("div");
       row.className = "plan-item";
       row.innerHTML = `
         <input type="checkbox" ${item.done ? "checked":""} data-id="${item.id}">
-        <span>${item.text}</span>
+        <span style="flex:1; text-decoration: ${item.done ? 'line-through' : 'none'}; opacity: ${item.done ? '0.6' : '1'}">${item.text}</span>
         <span class="pill">${item.type}</span>
-        <button class="right" data-del="${item.id}">Delete</button>
+        <button class="btn-danger small" data-del="${item.id}" style="padding:4px 8px; font-size:12px;">Del</button>
       `;
       list.appendChild(row);
     });
@@ -564,153 +1121,349 @@ function initApp() {
     list.querySelectorAll("input[type='checkbox']").forEach(function(cb){
       cb.addEventListener("change", function(e){
         const targetId = e.target.getAttribute("data-id");
-        const task = appState.plan.find(function(t){ return t.id === targetId; });
-        if(task){ 
-            task.done = e.target.checked; 
-            saveState(); 
-            renderDashboard(); 
-        }
+        const task = appState.plan.find(t=>t.id === targetId);
+        if(task){ task.done = e.target.checked; saveState(); renderPlan(); renderDashboard(); }
       });
     });
 
     list.querySelectorAll("button[data-del]").forEach(function(btn){
       btn.addEventListener("click", function(e){
         const targetId = e.target.getAttribute("data-del");
-        appState.plan = appState.plan.filter(function(t){ return t.id !== targetId; });
-        saveState(); 
-        renderPlan(); 
-        renderDashboard();
+        appState.plan = appState.plan.filter(t=>t.id !== targetId);
+        saveState(); renderPlan(); renderDashboard();
       });
     });
   }
 
-  function renderDashboard(){
-    const metrics = getOverallMetrics();
-    if(byId("overallPct")) byId("overallPct").textContent = metrics.percent + "%";
-    if(byId("overallBar")) byId("overallBar").style.width = metrics.percent + "%";
-    if(byId("doneCount")) byId("doneCount").textContent = metrics.done;
-    if(byId("totalCount")) byId("totalCount").textContent = metrics.total;
+  // --- Journal Logic ---
+  let activeNoteId = null;
 
-    const planDone = appState.plan.filter(function(t){ return t.done; }).length;
+  function renderJournal() {
+    const list = byId("journalEntriesList");
+    if(!list) return;
+    list.innerHTML = "";
+    
+    appState.journal.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(note => {
+      const div = document.createElement("div");
+      div.className = `journal-item ${activeNoteId === note.id ? 'active' : ''}`;
+      const d = new Date(note.date).toLocaleDateString();
+      div.innerHTML = `<strong>${note.title || 'Untitled Note'}</strong><span class="small">${d}</span>`;
+      div.addEventListener("click", () => openNote(note.id));
+      list.appendChild(div);
+    });
+
+    if(appState.journal.length === 0) {
+      list.innerHTML = `<p class="small">No notes created yet.</p>`;
+    }
+  }
+
+  function openNote(id) {
+    activeNoteId = id;
+    const note = appState.journal.find(n => n.id === id);
+    const titleEl = byId("journalTitle");
+    const contentEl = byId("journalContent");
+    
+    if(note) {
+      titleEl.value = note.title;
+      contentEl.value = note.content;
+      titleEl.disabled = false;
+      contentEl.disabled = false;
+      byId("saveNoteBtn").disabled = false;
+      byId("deleteNoteBtn").disabled = false;
+    }
+    renderJournal();
+  }
+
+  on("newNoteBtn", "click", function(){
+    const newNote = { id: uid(), title: "New Note", content: "", date: new Date().toISOString() };
+    appState.journal.push(newNote);
+    saveState();
+    openNote(newNote.id);
+  });
+
+  on("saveNoteBtn", "click", function(){
+    if(!activeNoteId) return;
+    const note = appState.journal.find(n => n.id === activeNoteId);
+    if(note) {
+      note.title = byId("journalTitle").value;
+      note.content = byId("journalContent").value;
+      note.date = new Date().toISOString(); // Update modified date
+      saveState();
+      renderJournal();
+      alert("Note Saved!");
+    }
+  });
+
+  on("deleteNoteBtn", "click", function(){
+    if(!activeNoteId || !confirm("Delete this note forever?")) return;
+    appState.journal = appState.journal.filter(n => n.id !== activeNoteId);
+    activeNoteId = null;
+    byId("journalTitle").value = "";
+    byId("journalContent").value = "";
+    byId("journalTitle").disabled = true;
+    byId("journalContent").disabled = true;
+    byId("saveNoteBtn").disabled = true;
+    byId("deleteNoteBtn").disabled = true;
+    saveState();
+    renderJournal();
+  });
+
+  // --- Analytics Logic ---
+  function renderAnalytics() {
+    let totalSeconds = 0;
+    const subjectMap = {};
+
+    appState.logs.forEach(log => {
+      totalSeconds += log.seconds;
+      subjectMap[log.subject] = (subjectMap[log.subject] || 0) + log.seconds;
+    });
+
+    if(byId("totalTimeDisplay")) byId("totalTimeDisplay").textContent = formatTime(totalSeconds);
+
+    const chartList = byId("analyticsChartList");
+    if(chartList) {
+      if(Object.keys(subjectMap).length === 0) {
+        chartList.innerHTML = '<p class="small">No data yet.</p>';
+      } else {
+        chartList.innerHTML = '';
+        const maxSecs = Math.max(...Object.values(subjectMap));
+        
+        // Sort descending
+        const sortedSubjs = Object.entries(subjectMap).sort((a,b) => b[1] - a[1]);
+        
+        sortedSubjs.forEach(([subj, secs]) => {
+          const pct = Math.round((secs / maxSecs) * 100);
+          const div = document.createElement("div");
+          div.style.marginBottom = "12px";
+          div.innerHTML = `
+            <div style="display:flex;justify-content:space-between; margin-bottom:4px;">
+              <strong>${subj}</strong><span>${formatTime(secs)}</span>
+            </div>
+            <div class="bar"><span style="width:${pct}%; background:var(--accent);"></span></div>
+          `;
+          chartList.appendChild(div);
+        });
+      }
+    }
+
+    // Recent Logs List
+    const recentList = byId("recentLogsList");
+    if(recentList) {
+      recentList.innerHTML = '';
+      const recent = [...appState.logs].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0,10);
+      if(recent.length === 0) { recentList.innerHTML = '<p class="small">No recent sessions.</p>'; }
+      recent.forEach(log => {
+        const d = new Date(log.date).toLocaleDateString();
+        const div = document.createElement("div");
+        div.className = "plan-item";
+        div.innerHTML = `<span>${log.subject}</span><span class="right pill">${formatTime(log.seconds)}</span><span class="small" style="margin-left:8px;">${d}</span>`;
+        recentList.appendChild(div);
+      });
+    }
+  }
+
+  // --- Calendar Logic ---
+  let calDate = new Date(); // Start at current month
+
+  // Attach goal button listener to the calendar grid to handle clicks
+  const calGridNode = document.querySelector(".calendar-grid");
+  if(calGridNode) {
+    calGridNode.addEventListener("click", function(e) {
+      if(e.target.classList.contains("check-btn")) {
+        const d = e.target.getAttribute("data-date");
+        // toggle success
+        appState.goalStatus[d] = (appState.goalStatus[d] === 'success') ? null : 'success';
+        saveState();
+        renderCalendar();
+      } else if (e.target.classList.contains("cross-btn")) {
+        const d = e.target.getAttribute("data-date");
+        // toggle fail
+        appState.goalStatus[d] = (appState.goalStatus[d] === 'fail') ? null : 'fail';
+        saveState();
+        renderCalendar();
+      }
+    });
+  }
+
+  function renderCalendar() {
+    const grid = document.querySelector(".calendar-grid");
+    const monthYearEl = byId("currentMonthYear");
+    if(!grid || !monthYearEl) return;
+
+    // Update Overall Missed Counter
+    let missedCount = 0;
+    Object.values(appState.goalStatus).forEach(val => { if(val === 'fail') missedCount++; });
+    const countEl = byId("failedGoalsCount");
+    if(countEl) countEl.textContent = missedCount;
+
+    const year = calDate.getFullYear();
+    const month = calDate.getMonth();
+    
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    monthYearEl.textContent = `${monthNames[month]} ${year}`;
+
+    // Clear days
+    const headers = `
+      <div class="cal-header">Sun</div><div class="cal-header">Mon</div><div class="cal-header">Tue</div>
+      <div class="cal-header">Wed</div><div class="cal-header">Thu</div><div class="cal-header">Fri</div><div class="cal-header">Sat</div>
+    `;
+    grid.innerHTML = headers;
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+
+    // Empty spots
+    for(let i=0; i<firstDay; i++) {
+      grid.innerHTML += `<div class="cal-day empty"></div>`;
+    }
+
+    // Fill days
+    for(let i=1; i<=daysInMonth; i++) {
+      const isToday = today.getDate() === i && today.getMonth() === month && today.getFullYear() === year;
+      const dateString = new Date(year, month, i).toDateString();
+      
+      const status = appState.goalStatus[dateString];
+      let dayClass = isToday ? 'today ' : '';
+      if(status === 'success') dayClass += 'success';
+      else if(status === 'fail') dayClass += 'fail';
+
+      // Very basic activity dot checking (logs or journal created on this day)
+      const hasLog = appState.logs.some(l => new Date(l.date).toDateString() === dateString);
+      const hasNote = appState.journal.some(n => new Date(n.date).toDateString() === dateString);
+      
+      let dotsHtml = '<div class="dots">';
+      if(hasLog) dotsHtml += '<div class="dot" title="Study Session Recorded"></div>';
+      if(hasNote) dotsHtml += '<div class="dot" style="background:var(--success)" title="Journal Note Added"></div>';
+      dotsHtml += '</div>';
+
+      grid.innerHTML += `<div class="cal-day ${dayClass}">
+        <div style="display:flex; justify-content:space-between; width:100%; align-items:flex-start;">
+          <span style="font-weight:bold;">${i}</span>
+          <div style="display:flex; gap:4px;">
+            <button class="goal-btn check-btn" data-date="${dateString}" style="color:${status==='success'?'var(--success)':'var(--muted)'}">✔</button>
+            <button class="goal-btn cross-btn" data-date="${dateString}" style="color:${status==='fail'?'var(--danger)':'var(--muted)'}">✘</button>
+          </div>
+        </div>
+        ${dotsHtml}
+      </div>`;
+    }
+  }
+
+  on("prevMonthBtn", "click", () => { calDate.setMonth(calDate.getMonth() - 1); renderCalendar(); });
+  on("nextMonthBtn", "click", () => { calDate.setMonth(calDate.getMonth() + 1); renderCalendar(); });
+  on("resetCalBtn", "click", () => { calDate = new Date(); renderCalendar(); });
+
+  // --- Dashboard ---
+  function renderDashboard(){
+    let total=0, done=0;
+    appState.syllabus.forEach(s=>{
+      s.topics.forEach(t=>{
+        total++; if(t.done) done++;
+        t.subtopics.forEach(st=>{ total++; if(st.done) done++; });
+      });
+    });
+    
+    const pct = total ? Math.round(done*100/total) : 0;
+    if(byId("overallPct")) byId("overallPct").textContent = pct + "%";
+    if(byId("overallBar")) byId("overallBar").style.width = pct + "%";
+    if(byId("doneCount")) byId("doneCount").textContent = done;
+    if(byId("totalCount")) byId("totalCount").textContent = total;
+
+    // Daily plan items only
+    const dailyPlan = appState.plan.filter(p => p.type === "Daily");
+    const planDone = dailyPlan.filter(t=>t.done).length;
     if(byId("planDone")) byId("planDone").textContent = planDone;
-    if(byId("planTotal")) byId("planTotal").textContent = appState.plan.length;
+    if(byId("planTotal")) byId("planTotal").textContent = dailyPlan.length;
 
     const sp = byId("subjectProgressList");
     if(!sp) return;
     sp.innerHTML = "";
-    appState.syllabus.forEach(function(s){
-      const pct = getSubjectCompletion(s);
+    appState.syllabus.forEach(s=>{
+      let stotal=0, sdone=0;
+      s.topics.forEach(t=>{
+        stotal++; if(t.done) sdone++;
+        t.subtopics.forEach(st=>{ stotal++; if(st.done) sdone++; });
+      });
+      const spct = stotal ? Math.round(sdone*100/stotal) : 0;
       const row = document.createElement("div");
       row.style.marginBottom = "10px";
-      row.innerHTML = `<div style="display:flex;justify-content:space-between"><span>${s.name}</span><span>${pct}%</span></div><div class="bar"><span style="width:${pct}%"></span></div>`;
+      row.innerHTML = `<div style="display:flex;justify-content:space-between; margin-bottom:4px;"><span>${s.name}</span><span>${spct}%</span></div><div class="bar"><span style="width:${spct}%"></span></div>`;
       sp.appendChild(row);
     });
   }
 
   function renderAll(){
-    if(appState.darkMode) {
-        document.body.classList.add("dark");
-    } else {
-        document.body.classList.remove("dark");
-    }
-    
-    const darkToggle = byId("darkToggle");
-    if(darkToggle) darkToggle.checked = !!appState.darkMode;
+    if(appState.darkMode) document.body.classList.add("dark");
+    else document.body.classList.remove("dark");
+    if(byId("darkToggle")) byId("darkToggle").checked = !!appState.darkMode;
     
     renderSyllabus(); 
     renderPlan(); 
     renderDashboard();
+    renderJournal();
+    // Only render calendar/analytics if needed to save cycles, but doing it here ensures state sync
+    renderCalendar();
+    renderAnalytics();
   }
 
-  // --- Attach Button Listeners ---
-
+  // --- External Input Listeners ---
   on("parseTextBtn","click", function(){
     const textArea = byId("syllabusText");
     const text = textArea ? textArea.value.trim() : "";
     if(!text) return alert("Paste syllabus text first.");
     appState.syllabus = parseSyllabusText(text);
-    saveState(); 
-    renderAll();
+    saveState(); renderAll();
   });
 
   on("parseFileBtn","click", function(){
     const fileInput = byId("fileInput");
     const file = (fileInput && fileInput.files) ? fileInput.files[0] : null;
-    if(!file) return alert("Choose a .md file.");
+    if(!file) return alert("Choose a text/md file.");
     
-    const ext = file.name.toLowerCase().split(".").pop();
-    if(ext !== "md" && ext !== "txt") return alert("Please select a text or markdown file.");
-    
-    // Fallback-friendly FileReader instead of modern await/Blob methods
     const reader = new FileReader();
     reader.onload = function(e) {
-      const content = e.target.result;
-      const textArea = byId("syllabusText");
-      if(textArea) textArea.value = content;
-      appState.syllabus = parseSyllabusText(content);
-      saveState(); 
-      renderAll();
+      if(byId("syllabusText")) byId("syllabusText").value = e.target.result;
+      appState.syllabus = parseSyllabusText(e.target.result);
+      saveState(); renderAll();
     };
     reader.readAsText(file);
   });
 
   on("searchInput","input", renderSyllabus);
-  
-  on("expandAll","click", function(){ 
-    appState.syllabus.forEach(function(s){ s.expanded = true; }); 
-    saveState(); 
-    renderSyllabus(); 
-  });
-  
-  on("collapseAll","click", function(){ 
-    appState.syllabus.forEach(function(s){ s.expanded = false; }); 
-    saveState(); 
-    renderSyllabus(); 
-  });
+  on("expandAll","click", function(){ appState.syllabus.forEach(s=>s.expanded=true); saveState(); renderSyllabus(); });
+  on("collapseAll","click", function(){ appState.syllabus.forEach(s=>s.expanded=false); saveState(); renderSyllabus(); });
 
   on("addTaskBtn","click", function(){
-    const taskTextEl = byId("taskText");
-    const taskTypeEl = byId("taskType");
-    const text = taskTextEl ? taskTextEl.value.trim() : "";
-    const type = taskTypeEl ? taskTypeEl.value : "Daily";
-    
+    const textEl = byId("taskText");
+    const typeEl = byId("taskType");
+    const text = textEl ? textEl.value.trim() : "";
     if(!text) return;
-    appState.plan.push({id:uid(), text:text, type:type, done:false});
-    
-    if(taskTextEl) taskTextEl.value = "";
-    saveState(); 
-    renderPlan(); 
-    renderDashboard();
+    appState.plan.push({id:uid(), text:text, type:typeEl.value, done:false});
+    if(textEl) textEl.value = "";
+    saveState(); renderPlan(); renderDashboard();
   });
 
   on("resetProgressBtn","click", function(){
     if(!confirm("Reset syllabus progress?")) return;
-    appState.syllabus.forEach(function(s){
-        s.topics.forEach(function(t){ 
-            t.done=false; 
-            t.subtopics.forEach(function(st){ st.done=false; }); 
-        });
-    });
-    saveState(); 
-    renderAll();
+    appState.syllabus.forEach(s=>s.topics.forEach(t=>{ t.done=false; t.subtopics.forEach(st=>st.done=false); }));
+    saveState(); renderAll();
   });
 
   on("resetPlanBtn","click", function(){
     if(!confirm("Reset study plan to default?")) return;
     appState.plan = defaultPlan();
-    saveState(); 
-    renderAll();
+    saveState(); renderAll();
   });
 
   on("resetAllBtn","click", function(){
-    if(!confirm("Reset all app data?")) return;
+    if(!confirm("Reset ALL app data? This includes journal, logs, and syllabus.")) return;
     resetAll();
   });
 
   on("darkToggle","change", function(e){
     appState.darkMode = e.target.checked;
-    saveState(); 
-    renderAll();
+    saveState(); renderAll();
   });
 
   on("exportBtn","click", function(){
@@ -718,47 +1471,37 @@ function initApp() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "upsc-tracker-backup.json";
-    document.body.appendChild(a); // Required for Firefox
+    a.download = "upsc-tracker-backup-full.json";
+    document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   });
 
   on("importBtn","click", function(){
-    const importInput = byId("importInput");
-    const f = (importInput && importInput.files) ? importInput.files[0] : null;
-    if(!f) return alert("Choose a JSON file to import.");
-    
+    const f = byId("importInput")?.files?.[0];
+    if(!f) return alert("Choose a JSON backup file.");
     const reader = new FileReader();
     reader.onload = function(e) {
       try {
         const data = JSON.parse(e.target.result);
-        if(!data || !Array.isArray(data.syllabus) || !Array.isArray(data.plan)) {
-            throw new Error("Invalid schema structure");
-        }
+        if(!data.syllabus || !data.plan) throw new Error("Invalid schema");
         appState = data;
-        saveState(); 
-        renderAll();
+        saveState(); renderAll();
         alert("Import successful.");
-      } catch(err) {
-        console.error("Import error", err);
-        alert("Invalid JSON backup file.");
-      }
+      } catch(err) { alert("Invalid JSON file."); }
     };
     reader.readAsText(f);
   });
 
-  // Final initial render
   renderAll();
 }
 
-// Bulletproof startup execution
 if (document.readyState === "complete" || document.readyState === "interactive") {
   setTimeout(initApp, 1);
 } else {
   document.addEventListener("DOMContentLoaded", initApp);
-  window.addEventListener("load", initApp); // Fallback if DOMContentLoaded misses
+  window.addEventListener("load", initApp); 
 }
 </script>
 </body>
